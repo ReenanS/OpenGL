@@ -1,10 +1,11 @@
 # depslib dependency file v1.0
-1533267805 source:c:\users\user\desktop\finsdeteste\main.cpp
+1533339551 source:c:\users\user\desktop\finsdeteste\main.cpp
 	<iostream>
 	<stdio.h>
 	<stdlib.h>
 	<cstdlib>
 	<sstream>
+	<time.h>
 	<GL/glew.h>
 	<GL/freeglut.h>
 	<OpenGL/glext.h>
@@ -267,6 +268,10 @@
 	<sys/types.h>
 
 1341006780 c:\program files (x86)\codeblocks\mingw\include\sys\types.h
+	<_mingw.h>
+	<stddef.h>
+
+1341006776 c:\program files (x86)\codeblocks\mingw\include\time.h
 	<_mingw.h>
 	<stddef.h>
 

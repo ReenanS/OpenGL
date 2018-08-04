@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <sstream>
+#include <time.h>
 
 #ifdef __APPLE__
 #  include <GL/glew.h>
@@ -18,7 +19,7 @@
 using namespace std;
 
 // Variaveis Globais.
-static float Xvalue = 0.0, Yvalue = -2.0; // Co-ordinates of the sphere.
+/*static float Xvalue = 0.0, Yvalue = -2.0; // Co-ordinates of the sphere.
 static float Angle = 0.0; // Angle to rotate the sphere.
 static int gameStarted = 0; // Animated?
 static int animationPeriod = 100; // Time interval between frames.
@@ -26,10 +27,13 @@ static float t = 1.0; // Time parameter.
 static float h = 0.5; // Horizontal component of initial velocity.
 static float voy = 4.0; // Vertical component of initial velocity.
 static float g = 9.8;  // Gravitational accelaration.
+static int isFloor = 0;*/
+const int quantidadeInimigo=5;
 
 void display();
 void drawItem();
 
+float tempo = 6;
 
 struct TVector
 {
@@ -44,11 +48,51 @@ struct TObject3D
 
 TObject3D sphere;
 
+struct TVectorInimigo
+{
+    float x,y;
+};
+
+struct TObject3DInimigo
+{
+    TVector posicao;
+    bool isVivo;
+};
+
+TObject3D inimigo;
+
+TObject3DInimigo vetInimigo[quantidadeInimigo];
+
 #define GRAVITY 9.8
+
+void SpawnInimigos() //criar meu inimigo no vetor
+{
+    for ( int i = 0; i < quantidadeInimigo; i++ )
+    {
+        if(vetInimigo[i].isVivo == true) //ve no vetor inimigos se tem espaço livre
+            {
+
+            }
+        else
+            {
+               float vet[]= {-2.5, 0.0, 2.5};
+               vetInimigo[i].posicao.x = vet[rand()%3]; //Achou morto
+               printf("%f \n", vetInimigo[i].posicao.x);
+               vetInimigo[i].posicao.y = 0;
+               vetInimigo[i].isVivo = true;
+        //printf("beef de calabresa posicao x escolhida %f e i escolhido %d",   vetInimigo[i].posicao.x, i);
+                return;
+            }
+    }
+
+
+}
+
+
 
 void RunPhysics(float dt)
 {
-    sphere.velocity.y=sphere.velocity.y-GRAVITY*dt;
+    sphere.velocity.y=sphere.velocity.y-GRAVITY*dt; //degivada do espaco
 
     sphere.position.x=sphere.position.x+sphere.velocity.x*dt;
     sphere.position.y=sphere.position.y+sphere.velocity.y*dt;
@@ -56,16 +100,21 @@ void RunPhysics(float dt)
 
     if (sphere.velocity.y<0)
     {
-
+        //sphere.position.y=0;
         if (sphere.position.y<0.5)
         {
 
-            if ((sphere.position.x>-2.5))
+            if ((sphere.position.x>=-2.5))
                 sphere.velocity.y=-sphere.velocity.y;
         }
 
-        if (sphere.position.y<-0.9)
-            sphere.velocity.y=-sphere.velocity.y;
+        if (sphere.position.y<0)
+        {
+            sphere.position.y=0;
+        }
+        //sphere.velocity.y=-sphere.velocity.y;
+        //sphere.velocity.y=0;
+        //sphere.position.y=0;
 
     }
 
@@ -100,7 +149,7 @@ void drawRoad()
 
     //Linha da esquerda
     glTranslatef(-5.0,0.0,0.0);
-    glColor3f(0.0,0.0,1.0);
+    glColor3f(1.0,1.0,1.0);
     glBegin(GL_QUADS);
     {
         glVertex3f(-0.7,0.0,10.0);
@@ -193,18 +242,50 @@ void drawSphere()
 //Desenha X Obstaculos aleatoriamente
 void drawObstacle()
 {
+    float vet[]= {-2.5, 0.0, 2.5};
+
     for (int i = 0; i < 2; i++)
     {
         glPushMatrix();
-        glTranslatef(-500 + rand() % 1000, 7 + rand() % 100, -500 + rand() % 1000);
-        glColor3f(1.0,1.0,1.0);
-        glutSolidCube(10);
+        glTranslatef(vet[rand()%3], 0.0, -7.0);
+        //glTranslatef(2,0,-20);
+        glColor3f(1.0,1.0,0.0);
+        glutSolidCube(0.625f);
         glPopMatrix();
     }
 
 }
 
+//Desenha X Trem aleatoriamente
+void drawTrem(struct TObject3DInimigo inimigo)
+{
+    float vet[]= {-2.5, 0.0, 2.5};
 
+    for (int i = 0; i < 2; i++)
+    {
+        glPushMatrix();
+        glTranslatef(inimigo.posicao.x, inimigo.posicao.y, -7.0);
+        //glTranslatef(2,0,-20);
+        glColor3f(1.0,1.0,0.0);
+        glutSolidCube(0.625f);
+        glPopMatrix();
+    }
+
+}
+
+void AtualizarPosicao() //Atualiza e desenha meu inimigo
+{
+    for ( int i = 0; i < quantidadeInimigo; i++ )
+    {
+        if(vetInimigo[i].isVivo == true) //ve no vetor inimigos se tem espaço livre
+            {
+                vetInimigo[i]
+                drawTrem(vetInimigo[i]);
+
+            }
+    }
+
+}
 
 void myIdle()
 {
@@ -216,6 +297,14 @@ void myIdle()
 // Drawing routine. DrawScene
 void display(void)
 {
+    if(tempo > 0.2f){
+        tempo = tempo - (tempo/500.0f);
+    }
+    else{
+        tempo = 6.0f;
+        SpawnInimigos();
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
@@ -226,8 +315,13 @@ void display(void)
 
     //Desenha a estrada
     drawRoad();
+
+    AtualizarPosicao();
+
+
+    //drawObstacle();
     drawSphere();
-    drawObstacle();
+
     //Se o jogo já começou, inicia o personagem e desenha o personagem
     /*
     if(!gameStarted)
@@ -295,12 +389,25 @@ static void key(unsigned char key, int x, int y)
     case 'w':
         //voy += 0.1;
         sphere.position.y += 1;
+        printf("%f",sphere.position.y);
         break;
     case 'a':
-        sphere.position.x -= 2.5;
+        if(sphere.position.x<=-2.5)
+        {
+        }
+        else
+        {
+            sphere.position.x -= 2.5;
+        }
         break;
     case 'd':
-        sphere.position.x += 2.5;
+        if(sphere.position.x>=2.5)
+        {
+        }
+        else
+        {
+            sphere.position.x += 2.5;
+        }
         break;
     case 'r':
         sphere.position.x=0;
@@ -319,6 +426,9 @@ static void key(unsigned char key, int x, int y)
         //Start_physics = 0.01;
         //glutPostRedisplay();
         //drawItem();
+        SpawnInimigos();
+
+        //drawTrem(TObject3DInimigo );
         break;
     }
     glutPostRedisplay();
@@ -334,9 +444,11 @@ void printInteraction(void)
          << "Pressione Q para sair." << endl;
 }
 
+
 // Rotina principal.
 int main(int argc, char **argv)
 {
+   // srand(time(NULL)); // Randomiza o rand()
     printInteraction();
     glutInit(&argc, argv);
     glutInitWindowSize(600,600);
@@ -349,7 +461,7 @@ int main(int argc, char **argv)
     glutDisplayFunc(display);
     glutIdleFunc(myIdle);
     glutKeyboardFunc(key);
-    glutFullScreen();             // Put into full screen
+    //glutFullScreen();             // Put into full screen
 
     glewInit();
 
