@@ -1,11 +1,14 @@
 # depslib dependency file v1.0
-1533339551 source:c:\users\user\desktop\finsdeteste\main.cpp
+1533945582 source:c:\users\user\desktop\finsdeteste\main.cpp
 	<iostream>
 	<stdio.h>
+	<windows.h>
 	<stdlib.h>
 	<cstdlib>
 	<sstream>
 	<time.h>
+	<math.h>
+	"ImportarSTL.h"
 	<GL/glew.h>
 	<GL/freeglut.h>
 	<OpenGL/glext.h>
@@ -274,4 +277,19 @@
 1341006776 c:\program files (x86)\codeblocks\mingw\include\time.h
 	<_mingw.h>
 	<stddef.h>
+
+1533615448 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+	<gl/gl.h>
+	<gl/glu.h>
+	<gl/glext.h>
+	"ImportarSTL.h"
+
+1341006774 c:\program files (x86)\codeblocks\mingw\include\math.h
+	<_mingw.h>
+
+1533615495 c:\users\user\desktop\finsdeteste\importarstl.h
 
