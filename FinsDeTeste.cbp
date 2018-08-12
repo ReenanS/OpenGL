@@ -44,6 +44,8 @@
 		</Linker>
 		<Unit filename="ImportarSTL.cpp" />
 		<Unit filename="ImportarSTL.h" />
+		<Unit filename="LerBMP.cpp" />
+		<Unit filename="LerBMP.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

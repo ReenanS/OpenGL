@@ -1,62 +1,65 @@
-#include <iostream>
+/*
+ * GLUT Subway Surfers
+ *
+ * Desenvolvido por Renan Souza Silva em Agosto 2018
+ *
+ * Esse programa is test harness for the sphere, cone
+ * and torus shapes in GLUT.
+ *
+ * Spinning wireframe and smooth shaded shapes are
+ * displayed until the ESC or q key is pressed.  The
+ * number of geometry stacks and slices can be adjusted
+ * using the + and - keys.
+ */
+
 #include <stdio.h>
-#include <windows.h>
-#include <stdlib.h>
-#include <cstdlib>
-#include <sstream>
 #include <time.h>
+#include <stdlib.h>
+#include "ImportarSTL.h" // .h para importar arquivo STL
+#include "LerBMP.h" // .h para ler arquivo BMP
+#include <windows.h>
+#include <gl/glu.h>
 #include <math.h>
-#include "ImportarSTL.h"
-
-
+#include <iostream>
 #ifdef __APPLE__
-#  include <GL/glew.h>
-#  include <GL/freeglut.h>
-#  include <OpenGL/glext.h>
+#include <GLUT/glut.h>
 #else
-#  include <GL/glew.h>
-#  include <GL/freeglut.h>
-#  include <GL/glext.h>
-#pragma comment(lib, "glew32.lib")
+#include <GL/glut.h>
 #endif
 
 using namespace std;
 
-// Variaveis Globais.
-/*static float Xvalue = 0.0, Yvalue = -2.0; // Co-ordinates of the sphere.
-static float Angle = 0.0; // Angle to rotate the sphere.
-static int gameStarted = 0; // Animated?
-static int animationPeriod = 100; // Time interval between frames.
-static float t = 1.0; // Time parameter.
-static float h = 0.5; // Horizontal component of initial velocity.
-static float voy = 4.0; // Vertical component of initial velocity.
-static float g = 9.8;  // Gravitational accelaration.
-static int isFloor = 0;*/
-const int quantidadeInimigo=5;
-float hmax;
-STL modelo;
+// Variaveis Globais
 
-void display();
-void drawItem();
+// Variavel que determina a quantidade de inimigos do jogo
+const int quantidadeInimigo=10;
+
+STL modelo;
 
 float tempo = 6;
 
+//Definição das estruturas
+
+// Criando um (estrutura) objeto esfera
+
 struct TVector
 {
-    float x,y;
+    float x,y,z;
 };
 
 struct TObject3D
 {
-    TVector position;
-    TVector velocity;
+    TVector posicao;
+    TVector velocidade;
 };
 
 TObject3D sphere;
 
+// Criando um (estrutura) objeto inimigo (trem)
+
 struct TVectorInimigo
 {
-    float x,y;
+    float x,y,z;
 };
 
 struct TObject3DInimigo
@@ -68,6 +71,8 @@ struct TObject3DInimigo
 TObject3D inimigo;
 
 TObject3DInimigo vetInimigo[quantidadeInimigo];
+
+void display();
 
 #define GRAVITY 9.8
 
@@ -83,7 +88,7 @@ void SpawnInimigos() //criar meu inimigo no vetor
         {
             float vet[]= {-2.5, 0.0, 2.5};
             vetInimigo[i].posicao.x = vet[rand()%3]; //Achou morto
-            printf("%f \n", vetInimigo[i].posicao.x);
+            //printf("%f \n", vetInimigo[i].posicao.x);
             vetInimigo[i].posicao.y = 0;
             vetInimigo[i].isVivo = true;
             //printf("beef de calabresa posicao x escolhida %f e i escolhido %d",   vetInimigo[i].posicao.x, i);
@@ -94,14 +99,13 @@ void SpawnInimigos() //criar meu inimigo no vetor
 
 }
 
-//(float dt)
 void RunPhysics(float dt)
 {
-    sphere.velocity.y=sphere.velocity.y-GRAVITY*dt; //degivada do espaco
+    sphere.velocidade.y=sphere.velocidade.y-GRAVITY*dt; //degivada do espaco
 
-    sphere.position.x=sphere.position.x+sphere.velocity.x*dt;
-    sphere.position.y=sphere.position.y+sphere.velocity.y*dt;
-
+    sphere.posicao.x=sphere.posicao.x+sphere.velocidade.x*dt;
+    sphere.posicao.y=sphere.posicao.y+sphere.velocidade.y*dt;
+    sphere.posicao.z=sphere.posicao.z+sphere.velocidade.z*dt;
     //sphere.velocity.y=0;
 
     //lançamento para cima a aceleração é negativa (g < 0).
@@ -128,20 +132,20 @@ void RunPhysics(float dt)
     }
     */
 
-    if (sphere.velocity.y<0)
+    if (sphere.velocidade.y<0)
     {
         //sphere.position.y=0;
-        if (sphere.position.y<0.5)
+        if (sphere.posicao.y<0.5)
         {
 
             //if ((sphere.position.x>=-2.5))
-            sphere.velocity.y=-GRAVITY*dt;
+            sphere.velocidade.y=-GRAVITY*dt;
             //sphere.velocity.y=-sphere.velocity.y;
         }
 
-        if (sphere.position.y<0)
+        if (sphere.posicao.y<0)
         {
-            sphere.position.y=0;
+            sphere.posicao.y=0;
         }
 
         //sphere.velocity.y=-sphere.velocity.y;
@@ -151,11 +155,11 @@ void RunPhysics(float dt)
     }
 }
 
-void drawRoad()
+void desenhaEstrada()
 {
     glPushMatrix();
 
-    //Linha central
+    //Desenha Linha central
     glColor3f(1.0,0.0,0.0);
     glBegin(GL_QUADS);
     {
@@ -166,7 +170,7 @@ void drawRoad()
     }
     glEnd();
 
-    //Linha da direita
+    //Desenha Linha da direita
     glTranslatef(2.5,0.0,0.0);
     glColor3f(0.0,1.0,0.0);
     glBegin(GL_QUADS);
@@ -178,7 +182,7 @@ void drawRoad()
     }
     glEnd();
 
-    //Linha da esquerda
+    //Desenha Linha da esquerda
     glTranslatef(-5.0,0.0,0.0);
     glColor3f(1.0,1.0,1.0);
     glBegin(GL_QUADS);
@@ -189,118 +193,45 @@ void drawRoad()
         glVertex3f(-0.7,0.0,-100.0);
     }
     glEnd();
-    /*
-        glTranslatef(2.5,0.0,-120.0);
-        glColor3f(1.0,1.0,1.0);
-        glBegin(GL_QUADS);
-        {
-            glVertex3f(-0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,-100.0);
-            glVertex3f(-0.7,0.0,-100.0);
-        }
-        glEnd();
-
-        glTranslatef(2.5,0.0,0.0);
-        glBegin(GL_QUADS);
-        {
-            glVertex3f(-0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,-100.0);
-            glVertex3f(-0.7,0.0,-100.0);
-        }
-        glEnd();
-
-        glTranslatef(-5.0,0.0,0.0);
-        glBegin(GL_QUADS);
-        {
-            glVertex3f(-0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,10.0);
-            glVertex3f(0.7,0.0,-100.0);
-            glVertex3f(-0.7,0.0,-100.0);
-        }
-        glEnd();*/
-    glPopMatrix();
-}
-
-/* This defines that point holds x and y coords.
-typedef struct
-{
-    float x;
-    float y;
-} point;
-
-// This is an array of 10 points
-point points[10];
-
-
-void pointsCoords(void)
-{
-
-
-
-// Generate the points (point coodrs)
-    for ( int i = 0; i < 10; i++ )
-    {
-        points.x = rand() % 650 + 1;
-        points.y = rand() % 650 + 1;
-    }
-
-}
-
-void drawItem(void)
-{
-
-// Draw the points
-    for ( int i = 0; i < 10; i++ )
-    {
-        glVertex3f(points.x, points.y,0.0);
-    }
-}
-
-*/
-void drawSphere()
-{
-    glPushMatrix(); // draw and place Sphere
-    glTranslated(sphere.position.x,sphere.position.y,0);
-
-    glColor3f(0.0, 0.0, 1.0);
-    glutSolidSphere(0.625f,20,20);
 
     glPopMatrix();
 }
 
-//Desenha X Obstaculos aleatoriamente
-void drawObstacle()
+void desenhaEsfera()
 {
-    float vet[]= {-2.5, 0.0, 2.5};
 
-    for (int i = 0; i < 2; i++)
-    {
-        glPushMatrix();
-        glTranslatef(vet[rand()%3], 0.0, -7.0);
-        //glTranslatef(2,0,-20);
-        glColor3f(1.0,1.0,0.0);
-        glutSolidCube(0.625f);
-        glPopMatrix();
-    }
+GLuint texture = LoadTexture("Zuma.bmp");
 
+GLUquadric *quad;
+
+glPushMatrix();
+
+//draw sun
+glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, texture);
+
+quad = gluNewQuadric();
+gluQuadricTexture(quad, 1);
+
+glTranslated(sphere.posicao.x,sphere.posicao.y,0);
+
+gluSphere(quad, 0.625f,20,20);
+
+glPopMatrix();
 }
 
 //Desenha X Trem aleatoriamente
-void drawTrem(struct TObject3DInimigo inimigo)
+void desenhaTrem(struct TObject3DInimigo inimigo)
 {
-    float vet[]= {-2.5, 0.0, 2.5};
+    float vet[]= {-2.5, 0.0, 2.5}; //Vetor de posicao (faixa esquerda, central, direita) para desenhar o trem
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++) // Varre todo o vetor de posicao do trem
     {
         glPushMatrix();
+
         glTranslatef(inimigo.posicao.x, inimigo.posicao.y, -7.0);
-        //glTranslatef(2,0,-20);
-        glColor3f(1.0,1.0,0.0);
-        //glutSolidCube(0.625f);
-        //Desenha modelo 3D
-        glScalef(1.2,1.2,1.2);
+        //Escala e Desenha modelo 3D
+        glScalef(1.2,1.2,5);
         DesenharSTL(modelo);
 
         glPopMatrix();
@@ -310,34 +241,28 @@ void drawTrem(struct TObject3DInimigo inimigo)
 
 void AtualizarPosicao() //Atualiza e desenha meu inimigo
 {
-    for ( int i = 0; i < quantidadeInimigo; i++ )
+    for ( int i = 0; i < quantidadeInimigo; i++ ) // Varre todo o vetor de quantidade de inimigos
     {
-        if(vetInimigo[i].isVivo == true) //ve no vetor inimigos se tem espaço livre
+        if(vetInimigo[i].isVivo == true) //Verifica se no vetor inimigos tem espaço livre
         {
-            vetInimigo[i]; //Paramos aqui
-            drawTrem(vetInimigo[i]);
-
+            vetInimigo[i]; //Se tá vivo ele muda a posicao e vem até o personagem
+            //vetInimigo[i].posicao.z = vetInimigo[rand()%3]; //Achou morto
+            //printf("%f \n", vetInimigo[i].posicao.z);//desce a posição em z e desenha inimigo
+            desenhaTrem(vetInimigo[i]);
         }
     }
 
 }
 
-void colisao()
-{
-
-}
-
-void myIdle()
+void idle()
 {
     RunPhysics(0.01);
     display();
-
 }
 
 // Drawing routine. DrawScene
 void display(void)
 {
-
     if(tempo > 0.2f)
     {
         tempo = tempo - (tempo/500.0f);
@@ -348,6 +273,7 @@ void display(void)
         SpawnInimigos();
     }
 
+    glClearColor (0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
@@ -356,46 +282,13 @@ void display(void)
     glTranslatef(0.0,-2.0,-7.0);
     glRotatef(20,1.0,0.0,0.0);
 
+    //Desenha estrada
+    desenhaEstrada();
 
-
-    //    glMatrixMode(GL_MODELVIEW);
-    //glEnable(GL_CULL_FACE);
-    //glRotatef(-20,1.0,0.0,0.0);
-    //glTranslatef(0.0,2.0,7.0);
-    //glScalef(0.5f,0.5f,0.0f);
-    //glTranslatef(0.0,-2.0,7-.0);
-    //glRotatef(20,1.0,0.0,0.0);
-
-    // glRotatef(20,1.0,0.0,0.0);
-    //   glColor3f(1,0,0);
-    //   DesenharSTL(modelo);
-    // glPopMatrix();
-
-
-
-    //Desenha a estrada
-    drawRoad();
-
-    /*Desenha modelo 3D
-    glPushMatrix();
-    glScalef(0.5,0.5,0.5);
-    DesenharSTL(modelo);
-    glPopMatrix();
-    */
     AtualizarPosicao();
 
-
-    //drawObstacle();
-    drawSphere();
-
-    //glMatrixMode(GL_PROJECTION);
-// modo de configuração do modelo
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
-
-
-
-
+    // Desenha esfera
+    //desenhaEsfera();
 
     //Se o jogo já começou, inicia o personagem e desenha o personagem
     /*
@@ -417,31 +310,6 @@ void display(void)
 
 }
 
-/* Routine to increase the rotation angle.
-void increaseYComponent(void)
-{
-    voy += 0.2;
-}
-
-// Timer function.
-void animate(int value)
-{
-    if (gameStarted)
-    {
-        increaseYComponent();
-
-        glutPostRedisplay();
-
-    }
-}
-*/
-
-// Rotina de Inicialização.
-void setup(void)
-{
-    glClearColor (0.0, 0.0, 0.0, 0.0);
-}
-
 // Janela OpenGL reformula a rotina.
 static void resize(int width, int height)
 {
@@ -459,52 +327,37 @@ static void key(unsigned char key, int x, int y)
     {
     case 27 :
     case 'q':
-        exit(0);
+        exit(0); //Sair do jogo
         break;
     case 'w':
-        //voy += 0.1;
-        //sphere.position.y += 1;
-        sphere.velocity.y +=10;
-        //printf("%f \n",sphere.velocity.y);
+        sphere.velocidade.y +=10; // Permite pular na direcao y
         break;
     case 'a':
-        if(sphere.position.x<=-2.5)
+        // Trava a esfera em x para não ultrapassar o limite da faixa da esquerda
+        if(sphere.posicao.x<=-2.5)
         {
         }
         else
         {
-            sphere.position.x -= 2.5;
+            sphere.posicao.x -= 2.5; // Permite andar para faixa da esquerda na direcao x
         }
         break;
     case 'd':
-        if(sphere.position.x>=2.5)
+        // Trava a esfera em x para não ultrapassar o limite da faixa da direita
+        if(sphere.posicao.x>=2.5)
         {
         }
         else
         {
-            sphere.position.x += 2.5;
+            sphere.posicao.x += 2.5; // Permite andar para faixa da direita na direcao x
         }
         break;
-    case 'r':
-        sphere.position.x=0;
-        sphere.position.y=0;
-        //glTranslated(sphere.position.x,sphere.position.y,0);
-        //RunPhysics(0.0);
+    case 'r': //Reseta o jogo
+        //Reinicia a posicao da esfera
+        sphere.posicao.x=0;
+        sphere.posicao.y=0;
         break;
     case 't':
-        /*if (gameStarted)
-            gameStarted = 0; //Press t to toggle between animation on and off.
-        else
-        {
-            gameStarted = 1;
-            //animate(1);
-        }*/
-        //Start_physics = 0.01;
-        //glutPostRedisplay();
-        //drawItem();
-        SpawnInimigos();
-
-        //drawTrem(TObject3DInimigo );
         break;
     }
     glutPostRedisplay();
@@ -520,7 +373,7 @@ void printInteraction(void)
          << "Pressione Q para sair." << endl;
 }
 
-
+/* Program entry point */
 // Rotina principal.
 int main(int argc, char **argv)
 {
@@ -531,21 +384,17 @@ int main(int argc, char **argv)
     glutInitWindowPosition(100,100);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
-    glutCreateWindow("GLUT Only 1 Sphere");
+    glutCreateWindow("GLUT Subway Surfers");
 
     LerArquivo(&modelo, "cubo.stl");
-    printf("Nome: %s\n", modelo.nome);
-    printf("Numero de faces: %i\n", modelo.nFaces);
-    //glScalef(0.5f,0.5f,0.5f);
 
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
-    glutIdleFunc(myIdle);
     glutKeyboardFunc(key);
-    glutFullScreen();             // Put into full screen
-
-    glewInit();
-
+    glutIdleFunc(idle);
+    //glutFullScreen();             // Put into full screen
     glutMainLoop();
+
+    return EXIT_SUCCESS;
 }
 

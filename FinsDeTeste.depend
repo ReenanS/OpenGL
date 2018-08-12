@@ -1,20 +1,16 @@
 # depslib dependency file v1.0
-1533945582 source:c:\users\user\desktop\finsdeteste\main.cpp
-	<iostream>
+1534113720 source:c:\users\user\desktop\finsdeteste\main.cpp
 	<stdio.h>
-	<windows.h>
-	<stdlib.h>
-	<cstdlib>
-	<sstream>
 	<time.h>
-	<math.h>
+	<stdlib.h>
 	"ImportarSTL.h"
-	<GL/glew.h>
-	<GL/freeglut.h>
-	<OpenGL/glext.h>
-	<GL/glew.h>
-	<GL/freeglut.h>
-	<GL/glext.h>
+	"LerBMP.h"
+	<windows.h>
+	<gl/glu.h>
+	<math.h>
+	<iostream>
+	<GLUT/glut.h>
+	<GL/glut.h>
 
 1407851732 c:\program files (x86)\codeblocks\mingw\include\gl\glew.h
 	<stddef.h>
@@ -278,18 +274,28 @@
 	<_mingw.h>
 	<stddef.h>
 
-1533615448 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
+1534112346 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<math.h>
-	<gl/gl.h>
 	<gl/glu.h>
-	<gl/glext.h>
 	"ImportarSTL.h"
 
 1341006774 c:\program files (x86)\codeblocks\mingw\include\math.h
 	<_mingw.h>
 
 1533615495 c:\users\user\desktop\finsdeteste\importarstl.h
+
+1534113110 source:c:\users\user\desktop\finsdeteste\lerbmp.cpp
+	"LerBMP.h"
+	<stdio.h>
+	<stdlib.h>
+	<GL/glu.h>
+
+1534112564 c:\users\user\desktop\finsdeteste\lerbmp.h
+	<GL/gl.h>
+
+1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\glut.h
+	"freeglut_std.h"
 

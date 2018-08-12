@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <gl/gl.h>
 #include <gl/glu.h>
-#include <gl/glext.h>
 #include "ImportarSTL.h"
 
 void LerArquivo(STL *modelo, char *arquivo)
