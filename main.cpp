@@ -34,6 +34,9 @@ using namespace std;
 // Variavel que determina a quantidade de inimigos do jogo
 const int quantidadeInimigo=10;
 
+// Determina os pontos de vida para definir quando morre
+int quantidadeVida = 3;
+
 STL modelo;
 
 float tempo = 6;
@@ -73,8 +76,21 @@ TObject3D inimigo;
 TObject3DInimigo vetInimigo[quantidadeInimigo];
 
 void display();
+void drawBitmapText(char *string, float x, float y, float z);
 
 #define GRAVITY 9.8
+
+void drawBitmapText(char *string, float x, float y, float z)
+{
+    char *c;
+    glRasterPos3f(x, y, z);//define position on the screen where to draw text.
+
+    for (c = string; *c != '\0'; c++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
+    }
+}
+
 
 void SpawnInimigos() //criar meu inimigo no vetor
 {
@@ -90,6 +106,7 @@ void SpawnInimigos() //criar meu inimigo no vetor
             vetInimigo[i].posicao.x = vet[rand()%3]; //Achou morto
             //printf("%f \n", vetInimigo[i].posicao.x);
             vetInimigo[i].posicao.y = 0;
+            vetInimigo[i].posicao.z = -17;
             vetInimigo[i].isVivo = true;
             //printf("beef de calabresa posicao x escolhida %f e i escolhido %d",   vetInimigo[i].posicao.x, i);
             return;
@@ -197,27 +214,72 @@ void desenhaEstrada()
     glPopMatrix();
 }
 
-void desenhaEsfera()
+void greenGround()
+{
+  //  GLuint texture2 = LoadTexture("download.bmp");
+  //  glBindTexture(GL_TEXTURE_2D, texture2);
+    //glColor3f(0.0,1.0,0.0);
+    glPushMatrix();
+    glTranslatef(0.0,-0.1,0.0);
+    glBegin(GL_QUADS);
+    {
+    //glTexCoord2f(0.0f, 0.0f); glColor3f(0, 1, 0); glVertex3f(-5.0f, 0.0f, 5.0f);
+    //glTexCoord2f(5.0f, 0.0f); glColor3f(0, 1, 0); glVertex3f(+5.0f, 0.0f, 5.0f);
+    //glTexCoord2f(5.0f, 50.0f);glColor3f(0, 1, 0); glVertex3f(+5.0f, 0.0f, -195.0f);
+    //glTexCoord2f(0.0f, 50.0f); glColor3f(0, 1, 0); glVertex3f(-5.0f, 0.0f, -195.0f);
+    }
+    glEnd();
+    glPopMatrix();
+}
+
+void ceuAzul()
+{
+    GLuint texture3 = LoadTexture("sky.bmp");
+    glBindTexture(GL_TEXTURE_2D, texture3);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    //glColor3f(0.0,1.0,0.0);
+    glPushMatrix();
+    glTranslatef(0.0,-140.0,-300.0);
+    glBegin(GL_QUADS);
+    {
+    glTexCoord2f(0.0f, 0.0f); glColor3f(0, 0, 1); glVertex2f(-280.0f, -280.0f);
+    glTexCoord2f(5.0f, 0.0f); glColor3f(0, 0, 1); glVertex2f(+280.0f, -280.0f);
+    glTexCoord2f(5.0f, 50.0f);glColor3f(0, 0, 1); glVertex2f(280.0f, 280.0f);
+    glTexCoord2f(0.0f, 50.0f); glColor3f(0, 0, 1); glVertex2f(-280.0f, 280.0f);
+    }
+    glEnd();
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glPopMatrix();
+
+}
+
+void trilho()
 {
 
-GLuint texture = LoadTexture("Zuma.bmp");
+    GLuint texture4 = LoadTexture("train2.bmp");
+    glBindTexture(GL_TEXTURE_2D, texture4);
+    glBegin(GL_QUADS);
+    {
+    glTexCoord2f(0.0f, 0.0f); glColor3f(0, 0, 1); glVertex3f(-0.7f, 0.0f, 10.0f);
+    glTexCoord2f(1.0f, 0.0f); glColor3f(0, 0, 1); glVertex3f(0.7f, 0.0f, 10.0f);
+    glTexCoord2f(1.0f, 50.0f);glColor3f(0, 0, 1); glVertex3f(0.7f, 0.0f, -190.0f);
+    glTexCoord2f(0.0f, 50.0f); glColor3f(0, 0, 1); glVertex3f(-0.7f, 0.0f, -190.0f);
+    }
+    glEnd();
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glPopMatrix();
 
-GLUquadric *quad;
+}
 
-glPushMatrix();
+void desenhaEsfera()
+{
+    glPushMatrix();
 
-//draw sun
-glEnable(GL_TEXTURE_2D);
-glBindTexture(GL_TEXTURE_2D, texture);
+        glTranslated(sphere.posicao.x,sphere.posicao.y,0);
 
-quad = gluNewQuadric();
-gluQuadricTexture(quad, 1);
+        glutSolidSphere(0.625f,20,20);
 
-glTranslated(sphere.posicao.x,sphere.posicao.y,0);
-
-gluSphere(quad, 0.625f,20,20);
-
-glPopMatrix();
+    glPopMatrix();
 }
 
 //Desenha X Trem aleatoriamente
@@ -229,7 +291,7 @@ void desenhaTrem(struct TObject3DInimigo inimigo)
     {
         glPushMatrix();
 
-        glTranslatef(inimigo.posicao.x, inimigo.posicao.y, -7.0);
+        glTranslatef(inimigo.posicao.x, inimigo.posicao.y, inimigo.posicao.z);
         //Escala e Desenha modelo 3D
         glScalef(1.2,1.2,5);
         DesenharSTL(modelo);
@@ -246,9 +308,18 @@ void AtualizarPosicao() //Atualiza e desenha meu inimigo
         if(vetInimigo[i].isVivo == true) //Verifica se no vetor inimigos tem espaço livre
         {
             vetInimigo[i]; //Se tá vivo ele muda a posicao e vem até o personagem
-            //vetInimigo[i].posicao.z = vetInimigo[rand()%3]; //Achou morto
-            //printf("%f \n", vetInimigo[i].posicao.z);//desce a posição em z e desenha inimigo
-            desenhaTrem(vetInimigo[i]);
+            vetInimigo[i].posicao.z += 0.01f;
+
+            if(vetInimigo[i].posicao.z > 2){
+                vetInimigo[i].isVivo = false;
+            }
+            else
+            {
+                //vetInimigo[i].posicao.z = vetInimigo[rand()%3]; //Achou morto
+                //printf("%f \n", vetInimigo[i].posicao.z);//desce a posição em z e desenha inimigo
+                desenhaTrem(vetInimigo[i]);
+            }
+
         }
     }
 
@@ -282,13 +353,17 @@ void display(void)
     glTranslatef(0.0,-2.0,-7.0);
     glRotatef(20,1.0,0.0,0.0);
 
+    //greenGround();
+    //ceuAzul();
+    //trilho();
+
     //Desenha estrada
     desenhaEstrada();
 
-    AtualizarPosicao();
-
     // Desenha esfera
-    //desenhaEsfera();
+    desenhaEsfera();
+
+    AtualizarPosicao();
 
     //Se o jogo já começou, inicia o personagem e desenha o personagem
     /*
@@ -306,6 +381,15 @@ void display(void)
 
     */
 
+    glColor3f(0, 1, 0);
+    //drawBitmapText("Vida:", 0, 0, 0);
+    //drawBitmapText("Tempo:", 0, 2, 0);
+
+/* calculate the delta time between frames
+ int time = glutGet(GLUT_ELAPSED_TIME);
+ delta = ((GLfloat) time - game.time) / 1000.0;
+ game.time = time;*/
+
     glutSwapBuffers();
 
 }
@@ -316,7 +400,7 @@ static void resize(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (GLdouble)width/(GLdouble)height,1,100);
+    gluPerspective(45, (GLdouble)width/(GLdouble)height,1,400);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -379,6 +463,7 @@ int main(int argc, char **argv)
 {
     srand(time(NULL)); // Randomiza o rand()
     printInteraction();
+
     glutInit(&argc, argv);
     glutInitWindowSize(600,600);
     glutInitWindowPosition(100,100);
@@ -387,6 +472,9 @@ int main(int argc, char **argv)
     glutCreateWindow("GLUT Subway Surfers");
 
     LerArquivo(&modelo, "cubo.stl");
+
+    GLuint texture2 = LoadTexture("download.bmp");
+    glBindTexture(GL_TEXTURE_2D, texture2);
 
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
