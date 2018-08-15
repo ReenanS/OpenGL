@@ -32,14 +32,25 @@ using namespace std;
 // Variaveis Globais
 
 // Variavel que determina a quantidade de inimigos do jogo
-const int quantidadeInimigo=10;
+const int quantidadeInimigo = 100;
 
 // Determina os pontos de vida para definir quando morre
 int quantidadeVida = 3;
 
+// Determina o raio da esfera
+float raio = 0.625f;
+
+//Variaveis do FOG
+static int fogOn = 1; // Fog on?
+//
+//char *TEXT_ID_ARRAY[] = {"cubo.stl","sphere.stl"};
+
 STL modelo;
+//STL modelo2;
 
 float tempo = 6;
+
+static int isCollision = 0; // Is there collision between the spacecraft and an asteroid?
 
 //Definição das estruturas
 
@@ -92,7 +103,7 @@ void drawBitmapText(char *string, float x, float y, float z)
 }
 
 
-void SpawnInimigos() //criar meu inimigo no vetor
+void SpawnInimigos() //criar meu inimigo no vetor //seta as posições do inimiogs / trem
 {
     for ( int i = 0; i < quantidadeInimigo; i++ )
     {
@@ -106,7 +117,7 @@ void SpawnInimigos() //criar meu inimigo no vetor
             vetInimigo[i].posicao.x = vet[rand()%3]; //Achou morto
             //printf("%f \n", vetInimigo[i].posicao.x);
             vetInimigo[i].posicao.y = 0;
-            vetInimigo[i].posicao.z = -17;
+            vetInimigo[i].posicao.z = -100;
             vetInimigo[i].isVivo = true;
             //printf("beef de calabresa posicao x escolhida %f e i escolhido %d",   vetInimigo[i].posicao.x, i);
             return;
@@ -160,7 +171,7 @@ void RunPhysics(float dt)
             //sphere.velocity.y=-sphere.velocity.y;
         }
 
-        if (sphere.posicao.y<0)
+        if (sphere.posicao.y <0)
         {
             sphere.posicao.y=0;
         }
@@ -216,20 +227,27 @@ void desenhaEstrada()
 
 void greenGround()
 {
-  //  GLuint texture2 = LoadTexture("download.bmp");
-  //  glBindTexture(GL_TEXTURE_2D, texture2);
+    //GLuint texture2 = LoadTexture("download.bmp");
+    //glBindTexture(GL_TEXTURE_2D, texture2);
     //glColor3f(0.0,1.0,0.0);
     glPushMatrix();
+    glEnable(GL_TEXTURE_2D);
     glTranslatef(0.0,-0.1,0.0);
     glBegin(GL_QUADS);
     {
-    //glTexCoord2f(0.0f, 0.0f); glColor3f(0, 1, 0); glVertex3f(-5.0f, 0.0f, 5.0f);
-    //glTexCoord2f(5.0f, 0.0f); glColor3f(0, 1, 0); glVertex3f(+5.0f, 0.0f, 5.0f);
-    //glTexCoord2f(5.0f, 50.0f);glColor3f(0, 1, 0); glVertex3f(+5.0f, 0.0f, -195.0f);
-    //glTexCoord2f(0.0f, 50.0f); glColor3f(0, 1, 0); glVertex3f(-5.0f, 0.0f, -195.0f);
+        glTexCoord2f(0.0f, 0.0f); /*glColor3f(0, 1, 0)*/;
+        glVertex3f(-5.0f, 0.0f, 5.0f);
+        glTexCoord2f(5.0f, 0.0f); /*glColor3f(0, 1, 0)*/;
+        glVertex3f(+5.0f, 0.0f, 5.0f);
+        glTexCoord2f(5.0f, 50.0f);/*glColor3f(0, 1, 0)*/;
+        glVertex3f(+5.0f, 0.0f, -195.0f);
+        glTexCoord2f(0.0f, 50.0f);/*glColor3f(0, 1, 0)*/;
+        glVertex3f(-5.0f, 0.0f, -195.0f);
     }
     glEnd();
+    glDisable(GL_TEXTURE_2D);
     glPopMatrix();
+
 }
 
 void ceuAzul()
@@ -242,10 +260,18 @@ void ceuAzul()
     glTranslatef(0.0,-140.0,-300.0);
     glBegin(GL_QUADS);
     {
-    glTexCoord2f(0.0f, 0.0f); glColor3f(0, 0, 1); glVertex2f(-280.0f, -280.0f);
-    glTexCoord2f(5.0f, 0.0f); glColor3f(0, 0, 1); glVertex2f(+280.0f, -280.0f);
-    glTexCoord2f(5.0f, 50.0f);glColor3f(0, 0, 1); glVertex2f(280.0f, 280.0f);
-    glTexCoord2f(0.0f, 50.0f); glColor3f(0, 0, 1); glVertex2f(-280.0f, 280.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glColor3f(0, 0, 1);
+        glVertex2f(-280.0f, -280.0f);
+        glTexCoord2f(5.0f, 0.0f);
+        glColor3f(0, 0, 1);
+        glVertex2f(+280.0f, -280.0f);
+        glTexCoord2f(5.0f, 50.0f);
+        glColor3f(0, 0, 1);
+        glVertex2f(280.0f, 280.0f);
+        glTexCoord2f(0.0f, 50.0f);
+        glColor3f(0, 0, 1);
+        glVertex2f(-280.0f, 280.0f);
     }
     glEnd();
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -260,13 +286,21 @@ void trilho()
     glBindTexture(GL_TEXTURE_2D, texture4);
     glBegin(GL_QUADS);
     {
-    glTexCoord2f(0.0f, 0.0f); glColor3f(0, 0, 1); glVertex3f(-0.7f, 0.0f, 10.0f);
-    glTexCoord2f(1.0f, 0.0f); glColor3f(0, 0, 1); glVertex3f(0.7f, 0.0f, 10.0f);
-    glTexCoord2f(1.0f, 50.0f);glColor3f(0, 0, 1); glVertex3f(0.7f, 0.0f, -190.0f);
-    glTexCoord2f(0.0f, 50.0f); glColor3f(0, 0, 1); glVertex3f(-0.7f, 0.0f, -190.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glColor3f(0, 0, 1);
+        glVertex3f(-0.7f, 0.0f, 10.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glColor3f(0, 0, 1);
+        glVertex3f(0.7f, 0.0f, 10.0f);
+        glTexCoord2f(1.0f, 50.0f);
+        glColor3f(0, 0, 1);
+        glVertex3f(0.7f, 0.0f, -190.0f);
+        glTexCoord2f(0.0f, 50.0f);
+        glColor3f(0, 0, 1);
+        glVertex3f(-0.7f, 0.0f, -190.0f);
     }
     glEnd();
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glPopMatrix();
 
 }
@@ -275,9 +309,11 @@ void desenhaEsfera()
 {
     glPushMatrix();
 
-        glTranslated(sphere.posicao.x,sphere.posicao.y,0);
-
-        glutSolidSphere(0.625f,20,20);
+    glTranslated(sphere.posicao.x,sphere.posicao.y,0);
+    //glTranslatef(0,0,0);
+    glutSolidSphere(raio,20,20);
+    //glScalef(1.2,1.2,5);
+    //DesenharSTL(modelo2);
 
     glPopMatrix();
 }
@@ -308,10 +344,11 @@ void AtualizarPosicao() //Atualiza e desenha meu inimigo
         if(vetInimigo[i].isVivo == true) //Verifica se no vetor inimigos tem espaço livre
         {
             vetInimigo[i]; //Se tá vivo ele muda a posicao e vem até o personagem
-            vetInimigo[i].posicao.z += 0.01f;
+            vetInimigo[i].posicao.z += 0.1f;
 
-            if(vetInimigo[i].posicao.z > 2){
-                vetInimigo[i].isVivo = false;
+            if(vetInimigo[i].posicao.z > 2)
+            {
+                vetInimigo[i].isVivo = false; //o trem tá morto
             }
             else
             {
@@ -331,6 +368,173 @@ void idle()
     display();
 }
 
+/*
+bool esfera_interseccao_trem(struct caixaColisao colBox1, struct caixaColisao colBox2)
+{
+    int f;
+    //Para cada face da caixa / trem:
+    for (f=0; f<modelo.nFaces; f++)
+    {
+        if((colBox1.pos[0] < colBox2.pos[0] + colBox2.largura) && (colBox1.pos[0] +  colBox1.largura > colBox2.pos[0]) &&
+                (colBox1.pos[1] < colBox2.pos[1] + colBox2.altura) && (colBox1.pos[1] + colBox1.altura > colBox2.pos[1]))      //Teste de colisao esfera contra face.
+        {
+            printf("Colidiu");     //If collision occurs, within the bounds of the side, report that collision.
+            return true;
+        }
+        else
+        {
+            printf("Nao colidiu");     //Else, report no collision.
+            return false;
+        }
+    }
+}
+
+*/
+
+/* Function to check if the spacecraft collides with an asteroid when the center of the base
+// of the craft is at (x, y, 0) and it is aligned at an angle a to to the -z direction.
+// Collision detection is approximate as instead of the spacecraft we use a bounding sphere.
+bool checaColidiuComTrem()
+{
+    /*
+        A funcao checaColidiuComTrem analisa se o trem estava vivo ou morto
+
+    // Check for collision with each asteroid.
+    for ( int i = 0; i < quantidadeInimigo; i++ ){ // Varre todo o vetor de quantidade de inimigos
+        if (vetInimigo[i].isVivo == true ){ // If asteroid exists.
+            printf("Era inimigo vivo");
+            return true;
+        }
+    }
+    printf("Nao era inimigo vivo");
+    return false;
+}
+
+// Function to check if two spheres centered at (x1,y1,z1) and (x2,y2,z2) with
+// radius r1 and r2 intersect.
+
+bool checaColisaoBox(struct caixaColisao colBox1, struct caixaColisao colBox2){
+    /*
+        A funcao checaColisaoBox verifica se houve uma intersecção entre o trem a esfera,
+        ou seja, dois objetos colidiram
+
+    // Se houve colisao
+    if((colBox1.pos[0] < colBox2.pos[0] + colBox2.largura) && (colBox1.pos[0] +  colBox1.largura > colBox2.pos[0]) &&
+       (colBox1.pos[1] < colBox2.pos[1] + colBox2.altura) && (colBox1.pos[1] + colBox1.altura > colBox2.pos[1])){
+       return true;
+    }
+    // Se nao houve colisao
+    else{
+        return false;
+    }
+}
+*/
+
+/*For each face we check if there is an intersection, and if there is an intersection we ensure it is within the region of the face.
+//To do this we ensure it is inside (or at least intersecting) all the surrounding face planes.
+bool sphere_intersects_box(sphere s, box b)
+{
+
+    bool in_left   = !sphere_outside_plane(s, b.left);
+    bool in_right  = !sphere_outside_plane(s, b.right);
+    bool in_front  = !sphere_outside_plane(s, b.front);
+    bool in_back   = !sphere_outside_plane(s, b.back);
+    bool in_top    = !sphere_outside_plane(s, b.top);
+    bool in_bottom = !sphere_outside_plane(s, b.bottom);
+
+    if (sphere_intersects_plane(s, b.top) &&
+            in_left && in_right && in_front && in_back)
+    {
+        return true;
+    }
+
+    if (sphere_intersects_plane(s, b.bottom) &&
+            in_left && in_right && in_front && in_back)
+    {
+        return true;
+    }
+
+    if (sphere_intersects_plane(s, b.left) &&
+            in_top && in_bottom && in_front && in_back)
+    {
+        return true;
+    }
+
+    if (sphere_intersects_plane(s, b.right) &&
+            in_top && in_bottom && in_front && in_back)
+    {
+        return true;
+    }
+
+    if (sphere_intersects_plane(s, b.front) &&
+            in_top && in_bottom && in_left && in_right)
+    {
+        return true;
+    }
+
+    if (sphere_intersects_plane(s, b.back) &&
+            in_top && in_bottom && in_left && in_right)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+//checking if a box is outside is as simple as ensuring it is not inside or intersecting.
+bool sphere_outside_box(sphere s, box b)
+{
+    return !(sphere_intersects_box(s, b));
+}*/
+
+/*void Fog() //Ajustar onde começa e onde termina
+{
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_FOG);
+    //glFogi(GL_FOG_MODE, GL_EXP2);
+    glFogi(GL_FOG_MODE, GL_LINEAR);
+    glFogfv(GL_FOG_COLOR, fogColor);
+    //glFogf(GL_FOG_DENSITY, density);
+    glFogf(GL_FOG_START, 1);
+    glFogf(GL_FOG_END, 100);
+    glHint(GL_FOG_HINT, GL_NICEST);
+}*/
+
+static void init(void)
+{
+    /*GLfloat position[] = { 0.5, 0.5, 3.0, 0.0 };
+    glEnable(GL_DEPTH_TEST);
+    glLightfv(GL_LIGHT0, GL_POSITION, position);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    {
+        GLfloat mat[3] = {0.1745, 0.01175, 0.01175};
+        glMaterialfv(GL_FRONT, GL_AMBIENT, mat);
+        mat[0] = 0.61424;
+        mat[1] = 0.04136;
+        mat[2] = 0.04136;
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+        mat[0] = 0.727811;
+        mat[1] = 0.626959;
+        mat[2] = 0.626959;
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+        glMaterialf(GL_FRONT, GL_SHININESS, 0.6*128.0);
+    }*/
+   // Turn lights off/on.
+    glEnable(GL_FOG);
+    {
+        GLfloat fogColor[3] = {0.8f, 0.8f, 0.8f}; // Define a nice light grey
+
+        glEnable(GL_DEPTH_TEST);
+        glFogi(GL_FOG_MODE, GL_LINEAR);
+        glFogfv(GL_FOG_COLOR, fogColor);
+        glHint(GL_FOG_HINT, GL_DONT_CARE);
+        glFogf(GL_FOG_START, 17.0);
+        glFogf(GL_FOG_END, 32.0);
+    }
+        glClearColor(0.8, 0.8, 0.8, 0.0); /* fog color */
+}
+
 // Drawing routine. DrawScene
 void display(void)
 {
@@ -344,7 +548,7 @@ void display(void)
         SpawnInimigos();
     }
 
-    glClearColor (0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.8, 0.8, 0.8, 0.0); //esquema de cores do fog
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
@@ -365,6 +569,13 @@ void display(void)
 
     AtualizarPosicao();
 
+    /* Escreve texto isolado (antes gluLookAt) .
+    glPushMatrix();
+    glColor3f(1.0, 0.0, 0.0);
+    if (isCollision)
+        drawBitmapText("Nao pode - vai colidir!", -28.0, 25.0, -30.0);
+    glPopMatrix();*/
+
     //Se o jogo já começou, inicia o personagem e desenha o personagem
     /*
     if(!gameStarted)
@@ -381,14 +592,14 @@ void display(void)
 
     */
 
-    glColor3f(0, 1, 0);
+    //glColor3f(0, 1, 0);
     //drawBitmapText("Vida:", 0, 0, 0);
     //drawBitmapText("Tempo:", 0, 2, 0);
 
-/* calculate the delta time between frames
- int time = glutGet(GLUT_ELAPSED_TIME);
- delta = ((GLfloat) time - game.time) / 1000.0;
- game.time = time;*/
+    /* calculate the delta time between frames
+     int time = glutGet(GLUT_ELAPSED_TIME);
+     delta = ((GLfloat) time - game.time) / 1000.0;
+     game.time = time;*/
 
     glutSwapBuffers();
 
@@ -441,7 +652,15 @@ static void key(unsigned char key, int x, int y)
         sphere.posicao.x=0;
         sphere.posicao.y=0;
         break;
-    case 't':
+    case 'f': //ativa e desliga o fog
+		 if (fogOn)
+         {
+            fogOn = 0;
+         } else
+         {
+            fogOn = 1;
+         }
+		 glutPostRedisplay();
         break;
     }
     glutPostRedisplay();
@@ -453,7 +672,8 @@ void printInteraction(void)
     cout << "Interacao:" << endl;
     cout << "Pressione as teclas de A, W, S, D para mover a esfera." << endl
          << "Pressione R para redefinir." << endl
-         << "Pressione T para iniciar o jogo." << endl
+         << "Pressione I para iniciar o jogo." << endl
+         << "Pressione F para ativar ou desligar o FOG." << endl
          << "Pressione Q para sair." << endl;
 }
 
@@ -470,15 +690,21 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     glutCreateWindow("GLUT Subway Surfers");
+    init();
 
+    //Lê arquivo .STL
     LerArquivo(&modelo, "cubo.stl");
+    //printf("Nome: %s\n", modelo.nome);
+    //printf("Numero de faces: %i\n", modelo.nFaces);
+    //LerArquivo(&modelo2, "sphere.stl");
 
-    GLuint texture2 = LoadTexture("download.bmp");
-    glBindTexture(GL_TEXTURE_2D, texture2);
+    //Lê textura
+    //GLuint texture2 = LoadTexture("download.bmp");
+    //glBindTexture(GL_TEXTURE_2D, texture2); //nao precisa
 
     glutReshapeFunc(resize);
-    glutDisplayFunc(display);
     glutKeyboardFunc(key);
+    glutDisplayFunc(display);
     glutIdleFunc(idle);
     //glutFullScreen();             // Put into full screen
     glutMainLoop();
