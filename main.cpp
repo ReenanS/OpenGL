@@ -41,8 +41,8 @@ int quantidadeVida = 3;
 float raio = 0.625f;
 
 //Variaveis do FOG
-static int fogOn = 1; // Fog on?
-//
+static int fogOn = 0; // Fog on?
+GLfloat fogColor[3] = {0.8f, 0.8f, 0.8f}; // Define a nice light grey
 //char *TEXT_ID_ARRAY[] = {"cubo.stl","sphere.stl"};
 
 STL modelo;
@@ -282,6 +282,7 @@ void ceuAzul()
 void trilho()
 {
 
+    // Map the sky texture onto a rectangle parallel to the xy-plane.
     GLuint texture4 = LoadTexture("train2.bmp");
     glBindTexture(GL_TEXTURE_2D, texture4);
     glBegin(GL_QUADS);
@@ -311,6 +312,7 @@ void desenhaEsfera()
 
     glTranslated(sphere.posicao.x,sphere.posicao.y,0);
     //glTranslatef(0,0,0);
+    glColor3f(0.0f,0.0f,1.0f);
     glutSolidSphere(raio,20,20);
     //glScalef(1.2,1.2,5);
     //DesenharSTL(modelo2);
@@ -520,19 +522,7 @@ static void init(void)
         glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
         glMaterialf(GL_FRONT, GL_SHININESS, 0.6*128.0);
     }*/
-   // Turn lights off/on.
-    glEnable(GL_FOG);
-    {
-        GLfloat fogColor[3] = {0.8f, 0.8f, 0.8f}; // Define a nice light grey
 
-        glEnable(GL_DEPTH_TEST);
-        glFogi(GL_FOG_MODE, GL_LINEAR);
-        glFogfv(GL_FOG_COLOR, fogColor);
-        glHint(GL_FOG_HINT, GL_DONT_CARE);
-        glFogf(GL_FOG_START, 17.0);
-        glFogf(GL_FOG_END, 32.0);
-    }
-        glClearColor(0.8, 0.8, 0.8, 0.0); /* fog color */
 }
 
 // Drawing routine. DrawScene
@@ -548,8 +538,19 @@ void display(void)
         SpawnInimigos();
     }
 
-    glClearColor(0.8, 0.8, 0.8, 0.0); //esquema de cores do fog
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   // Turn lights off/on.
+   // Fog controls.
+   if (fogOn) glEnable(GL_FOG); else glDisable(GL_FOG);
+    {
+        glFogfv(GL_FOG_COLOR, fogColor);
+        glFogi(GL_FOG_MODE, GL_LINEAR);
+        glFogf(GL_FOG_START, 17.0);
+        glFogf(GL_FOG_END, 32.0);
+        glHint(GL_FOG_HINT, GL_NICEST);
+    }
+    glClearColor(0.8, 0.8, 0.8, 0.0); /* fog color */
 
     glLoadIdentity();
 
@@ -673,7 +674,7 @@ void printInteraction(void)
     cout << "Pressione as teclas de A, W, S, D para mover a esfera." << endl
          << "Pressione R para redefinir." << endl
          << "Pressione I para iniciar o jogo." << endl
-         << "Pressione F para ativar ou desligar o FOG." << endl
+         << "Pressione F para ativar ou desativar o FOG." << endl
          << "Pressione Q para sair." << endl;
 }
 
@@ -690,7 +691,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     glutCreateWindow("GLUT Subway Surfers");
-    init();
+   // init();
 
     //Lê arquivo .STL
     LerArquivo(&modelo, "cubo.stl");
