@@ -1,5 +1,53 @@
 # depslib dependency file v1.0
-1534308815 source:c:\users\user\desktop\finsdeteste\main.cpp
+1534112346 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+	<gl/glu.h>
+	"ImportarSTL.h"
+
+1341006776 c:\program files (x86)\codeblocks\mingw\include\stdio.h
+	<_mingw.h>
+	<stddef.h>
+	<stdarg.h>
+	<sys/types.h>
+
+1341006770 c:\program files (x86)\codeblocks\mingw\include\_mingw.h
+
+1341006780 c:\program files (x86)\codeblocks\mingw\include\sys\types.h
+	<_mingw.h>
+	<stddef.h>
+
+1341006776 c:\program files (x86)\codeblocks\mingw\include\stdlib.h
+	<_mingw.h>
+	<stddef.h>
+
+1341006776 c:\program files (x86)\codeblocks\mingw\include\string.h
+	<_mingw.h>
+	<stddef.h>
+
+1341006774 c:\program files (x86)\codeblocks\mingw\include\math.h
+	<_mingw.h>
+
+1301111164 c:\program files (x86)\codeblocks\mingw\include\gl\glu.h
+	<stddef.h>
+	<GL/gl.h>
+
+1301111164 c:\program files (x86)\codeblocks\mingw\include\gl\gl.h
+
+1533615495 c:\users\user\desktop\finsdeteste\importarstl.h
+
+1534395098 source:c:\users\user\desktop\finsdeteste\lerbmp.cpp
+	"LerBMP.h"
+	<stdio.h>
+	<stdlib.h>
+	<GL/glu.h>
+
+1534395120 c:\users\user\desktop\finsdeteste\lerbmp.h
+	<GL/gl.h>
+
+1534484065 source:c:\users\user\desktop\finsdeteste\main.cpp
 	<stdio.h>
 	<time.h>
 	<stdlib.h>
@@ -12,45 +60,9 @@
 	<GLUT/glut.h>
 	<GL/glut.h>
 
-1407851732 c:\program files (x86)\codeblocks\mingw\include\gl\glew.h
-	<stddef.h>
-	<inttypes.h>
-	<stdint.h>
-	<inttypes.h>
-	<Availability.h>
-	<OpenGL/glu.h>
-	<GL/glu.h>
-
-1341006772 c:\program files (x86)\codeblocks\mingw\include\inttypes.h
+1341006776 c:\program files (x86)\codeblocks\mingw\include\time.h
 	<_mingw.h>
-	<stdint.h>
 	<stddef.h>
-
-1341006770 c:\program files (x86)\codeblocks\mingw\include\_mingw.h
-
-1341006776 c:\program files (x86)\codeblocks\mingw\include\stdint.h
-	<stddef.h>
-
-1301111164 c:\program files (x86)\codeblocks\mingw\include\gl\glu.h
-	<stddef.h>
-	<GL/gl.h>
-
-1301111164 c:\program files (x86)\codeblocks\mingw\include\gl\gl.h
-
-1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\freeglut.h
-	"freeglut_std.h"
-	"freeglut_ext.h"
-
-1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\freeglut_std.h
-	<windows.h>
-	<EGL/egl.h>
-	<GLES/gl.h>
-	<GLES2/gl2.h>
-	<OpenGL/gl.h>
-	<OpenGL/glu.h>
-	<GL/gl.h>
-	<GL/glu.h>
-	<stdlib.h>
 
 1301111162 c:\program files (x86)\codeblocks\mingw\include\windows.h
 	<winresrc.h>
@@ -100,10 +112,6 @@
 	<poppack.h>
 
 1301111162 c:\program files (x86)\codeblocks\mingw\include\winerror.h
-
-1341006776 c:\program files (x86)\codeblocks\mingw\include\string.h
-	<_mingw.h>
-	<stddef.h>
 
 1301111148 c:\program files (x86)\codeblocks\mingw\include\basetsd.h
 
@@ -233,10 +241,6 @@
 	<objidl.h>
 	<cguid.h>
 
-1341006776 c:\program files (x86)\codeblocks\mingw\include\stdlib.h
-	<_mingw.h>
-	<stddef.h>
-
 1301111156 c:\program files (x86)\codeblocks\mingw\include\objidl.h
 	<objfwd.h>
 
@@ -254,48 +258,17 @@
 1301111156 c:\program files (x86)\codeblocks\mingw\include\oleidl.h
 	<objfwd.h>
 
-1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\freeglut_ext.h
-	<stdarg.h>
-
-1301111164 c:\program files (x86)\codeblocks\mingw\include\gl\glext.h
-	<windows.h>
-
-1341006776 c:\program files (x86)\codeblocks\mingw\include\stdio.h
-	<_mingw.h>
-	<stddef.h>
-	<stdarg.h>
-	<sys/types.h>
-
-1341006780 c:\program files (x86)\codeblocks\mingw\include\sys\types.h
-	<_mingw.h>
-	<stddef.h>
-
-1341006776 c:\program files (x86)\codeblocks\mingw\include\time.h
-	<_mingw.h>
-	<stddef.h>
-
-1534112346 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
-	<stdio.h>
-	<stdlib.h>
-	<string.h>
-	<math.h>
-	<gl/glu.h>
-	"ImportarSTL.h"
-
-1341006774 c:\program files (x86)\codeblocks\mingw\include\math.h
-	<_mingw.h>
-
-1533615495 c:\users\user\desktop\finsdeteste\importarstl.h
-
-1534290024 source:c:\users\user\desktop\finsdeteste\lerbmp.cpp
-	"LerBMP.h"
-	<stdio.h>
-	<stdlib.h>
-	<GL/glu.h>
-
-1534112564 c:\users\user\desktop\finsdeteste\lerbmp.h
-	<GL/gl.h>
-
 1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\glut.h
 	"freeglut_std.h"
+
+1426360528 c:\program files (x86)\codeblocks\mingw\include\gl\freeglut_std.h
+	<windows.h>
+	<EGL/egl.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<stdlib.h>
 
