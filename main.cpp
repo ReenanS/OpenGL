@@ -52,7 +52,7 @@ STL modelo;
 
 float tempo = 6;
 
-//static int isCollision = 0; // Collision on?
+bool isJumping = false; // Ta pulando? Nao
 
 //Textura
 
@@ -62,17 +62,6 @@ GLuint ceuTex;
 GLuint tunelTex;
 
 //Definição das estruturas
-
-// Criando uma estrutura para colisoes de caixa (bounded box)
-struct boundingBox
-{
-    // Utilizado para sabe em qual objeto ocorreu a colisao
-    int idObj;
-
-    // A posicao sera considerada como um quadrado de colisao
-    float pos[3];
-    float largura,altura,profundidade;
-};
 
 // Criando um (estrutura) objeto - esfera
 
@@ -144,14 +133,14 @@ void SpawnInimigos() //criar meu inimigo no vetor //seta as posições do inimiogs
 
 float SmoothMovement(float flGoal, float flCurrent, float dt)
 {
-	float flDifference = flGoal - flCurrent;
+    float flDifference = flGoal - flCurrent;
 
-	if (flDifference > dt)
-		return flCurrent + dt;
-	if (flDifference < -dt)
-		return flCurrent - dt;
+    if (flDifference > dt)
+        return flCurrent + dt;
+    if (flDifference < -dt)
+        return flCurrent - dt;
 
-	return flGoal;
+    return flGoal;
 }
 
 
@@ -192,18 +181,26 @@ void RunPhysics(float dt)
 
     if (esfera.velocidade.y<0)
     {
+        //printf("%f", esfera.posicao.y);
+        // if((esfera.posicao.y > 1.9f) && (esfera.posicao.y < 2.0f)){
+        //        esfera.posicao.y = 2.0f;
+        //    printf("wasertfgyjg");
+        //            esfera.velocidade.y=esfera.velocidade.y+GRAVITY*dt; //degivada do espaco
+        //}
         //sphere.position.y=0;
-        if (esfera.posicao.y<0.5)
-        {
-
+        //if (esfera.posicao.y<0.5)
+        //{
             //if ((sphere.position.x>=-2.5))
-            esfera.velocidade.y=-GRAVITY*dt;
+           // esfera.velocidade.y=-GRAVITY*dt;
+         //  esfera.velocidade.y = 0;
             //sphere.velocity.y=-sphere.velocity.y;
-        }
+        //}
 
-        if (esfera.posicao.y <0)
+        if (esfera.posicao.y<0)
         {
+            esfera.velocidade.y = 0;
             esfera.posicao.y=0;
+            isJumping = false;
         }
 
         //sphere.velocity.y=-sphere.velocity.y;
@@ -221,30 +218,42 @@ void desenhaEstrada()
     glBindTexture(GL_TEXTURE_2D, trilhoTex);
     glBegin(GL_QUADS); //Desenha no sentido horario
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.25f,0.0f,2.0f); //Vertice inferior esquerdo
-        glTexCoord2f(0.0f, 20.0f); glVertex3f(-1.25f,0.0f,-100.0f); //Vertice superior esquerdo
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(1.25f,0.0f,-100.0f); //Vertice superior direito
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(1.25f,0.0f,2.0f); //Vertice inferior direito
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-1.25f,0.0f,2.0f); //Vertice inferior esquerdo
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(-1.25f,0.0f,-100.0f); //Vertice superior esquerdo
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(1.25f,0.0f,-100.0f); //Vertice superior direito
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(1.25f,0.0f,2.0f); //Vertice inferior direito
     }
     glEnd();
 
     //Desenha Linha da direita
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f);glVertex3f(1.25f,0.0f,2.0f);
-        glTexCoord2f(0.0f, 20.0f);glVertex3f(1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(3.75f,0.0f,2.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(1.25f,0.0f,2.0f);
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(1.25f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(3.75f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(3.75f,0.0f,2.0f);
     }
     glEnd();
 
     //Desenha Linha da esquerda
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f);glVertex3f(-3.75f,0.0f,2.0f);
-        glTexCoord2f(0.0f, 20.0f);glVertex3f(-3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(-1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(-1.25f,0.0f,2.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-3.75f,0.0f,2.0f);
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(-3.75f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(-1.25f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(-1.25f,0.0f,2.0f);
     }
     glEnd();
 
@@ -258,13 +267,36 @@ void desenhaEsfera()
 
     glTranslated(esfera.posicao.x,esfera.posicao.y+raio,0);
     //glTranslatef(0,0,0);
-    glColor3f(0.0f,0.0f,1.0f);
+    //glColor3f(0.0f,0.0f,1.0f);
     glutSolidSphere(raio,20,20);
     //glScalef(1.2,1.2,5);
     //DesenharSTL(modelo2);
 
     glPopMatrix();
 }
+
+// Comparacao de colisao do personagem (esfera) com os trem (cubo) - Colisao AABB
+bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
+{
+    // Verificar se houve colisao - metodo AABB - para eixos x e z
+    if((esfera.posicao.x < trem.posicao.x + 2.5) && (esfera.posicao.x +  raio > trem.posicao.x) &&
+            (esfera.posicao.z < trem.posicao.z + 2.5) && (esfera.posicao.z + raio > trem.posicao.z))
+    {
+        return true;
+        if(trem.posicao.y = 2.5)
+        {
+            //return true;
+            //glTranslatef(esfera.posicao.x, 4.5f, esfera.posicao.z);
+        }
+    }
+    //}
+    // Se nao houve colisao
+    else
+    {
+        return false;
+    }
+}
+
 
 //Desenha X Trem aleatoriamente
 void desenhaTrem(struct Objeto3DInimigo trem)
@@ -280,10 +312,22 @@ void desenhaTrem(struct Objeto3DInimigo trem)
         glScalef(2.5,2.5,37);
         DesenharSTL(modelo);
 
+        if(objetoColidiu(esfera,trem))
+        {
+            //printf("Colidiu");
+            quantidadeVida = quantidadeVida - 1;
+            printf("%f",quantidadeVida);
+        }
+        else
+        {
+            //printf("Nao Colidiu");
+        }
+
         glPopMatrix();
     }
 
 }
+
 
 void AtualizarPosicao() //Atualiza e desenha meu inimigo
 {
@@ -310,38 +354,6 @@ void AtualizarPosicao() //Atualiza e desenha meu inimigo
     }
 }
 
-/*
-A funcao checaColisaoBox verifica se houve uma intersecção entre 2 caixas,
-ou seja, dois objetos colidiram
-
-bool checaColisaoBox(struct boundingBox colBox1, struct boundingBox colBox2){
-
-    // Se houve colisao
-    if((colBox1.pos[0] < colBox2.pos[0] + colBox2.largura) && (colBox1.pos[0] +  colBox1.largura > colBox2.pos[0]) &&
-       (colBox1.pos[1] < colBox2.pos[1] + colBox2.altura) && (colBox1.pos[1] + colBox1.altura > colBox2.pos[1])){
-       return true;
-    }
-    // Se nao houve colisao
-    else{
-        return false;
-    }
-}
-
-/* Comparacao de colisao do personagem (esfera) com os trem (cubo)
-bool objetoColidiu(struct TObject3D, struct STL){
-
-    // Analisa se o x coincidiu
-    if (sphere.posicao.x == modelo.centro.x){
-            // Analisa se o y coincidiu
-            if(sphere.posicao.y == modelo.centro){
-                return true;
-            }
-            return false;
-    }
-    return false;
-}
-*/
-
 void idle()
 {
     RunPhysics(0.01);
@@ -352,23 +364,23 @@ static void init(void)
 {
     //Lighting set up
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
 
     // Set lighting intensity and color
-    GLfloat qaAmbientLight[] = {0.8, 0.8, 0.8, 1.0};
-    GLfloat qaDiffuseLight[] = { 5, 5, 5, 1 };
+    GLfloat qaAmbientLight[] = {1.0, 1.0, 1.0, 0.0};
+    GLfloat qaDiffuseLight[] = { 0.8, 0.8, 0.8, 1 };
     GLfloat qaSpecularLight[]	= {0.8, 0.8, 0.8, 1.0};
     glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
     glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
 
     // Set the light position
-    //GLfloat qaLightPosition[] = { 0, 0, 0, 1 };
+    GLfloat qaLightPosition[] = { 0, 0, 0, 1 };
 
-    //glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
+    glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
 
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
 }
 
 void greenGround()
@@ -379,10 +391,14 @@ void greenGround()
     glTranslatef(0.0,-0.01,0.0);
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-6.25f, 0.0f, 2.0f);
-        glTexCoord2f(0.0f, 20.0f); glVertex3f(-6.25f, 0.0f, -100.0f);
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(6.25f, 0.0f, -100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(6.25f, 0.0f, 2.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-6.25f, 0.0f, 2.0f);
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(-6.25f, 0.0f, -100.0f);
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(6.25f, 0.0f, -100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(6.25f, 0.0f, 2.0f);
     }
     glEnd();
     glDisable(GL_TEXTURE_2D);
@@ -398,30 +414,42 @@ void desenhaParede()
     glBindTexture(GL_TEXTURE_2D, tunelTex);
     glBegin(GL_QUADS); //Desenha no sentido horario
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(6.25f,0.0f,0.0f); //Vertice inferior esquerdo
-        glTexCoord2f(0.0f, 20.0f); glVertex3f(6.25f,2.0f,-100.0f); //Vertice superior esquerdo
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(8.75f,2.0f,-100.0f); //Vertice superior direito
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(8.75f,0.0f,0.0f); //Vertice inferior direito
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(6.25f,0.0f,0.0f); //Vertice inferior esquerdo
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(6.25f,2.0f,-100.0f); //Vertice superior esquerdo
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(8.75f,2.0f,-100.0f); //Vertice superior direito
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(8.75f,0.0f,0.0f); //Vertice inferior direito
     }
     glEnd();
 
     //Desenha Linha da direita
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f);glVertex3f(-6.25f,0.0f,0.0f);
-        glTexCoord2f(0.0f, 20.0f);glVertex3f(-6.25f,2.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(-8.75f,2.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(-8.75f,0.0f,0.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-6.25f,0.0f,0.0f);
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(-6.25f,2.0f,-100.0f);
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(-8.75f,2.0f,-100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(-8.75f,0.0f,0.0f);
     }
     glEnd();
 
     //Desenha Linha da esquerda
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f);glVertex3f(-3.75f,0.0f,0.0f);
-        glTexCoord2f(0.0f, 20.0f);glVertex3f(-3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);glVertex3f(-1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(-1.25f,0.0f,0.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-3.75f,0.0f,0.0f);
+        glTexCoord2f(0.0f, 20.0f);
+        glVertex3f(-3.75f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 20.0f);
+        glVertex3f(-1.25f,0.0f,-100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(-1.25f,0.0f,0.0f);
     }
     glEnd();
 
@@ -440,10 +468,14 @@ void desenhaTunel()
     //Desenha Tunel
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f);glVertex3f(-6.25f,0.0f,-100.0f);
-        glTexCoord2f(0.0f, 1.0f);glVertex3f(-6.25f,10.0f,-100.0f);
-        glTexCoord2f(1.0f, 1.0f);glVertex3f(6.25f,10.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);glVertex3f(6.25f,0.0f,-100.0f);
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex3f(-6.25f,0.0f,-100.0f);
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex3f(-6.25f,10.0f,-100.0f);
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex3f(6.25f,10.0f,-100.0f);
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex3f(6.25f,0.0f,-100.0f);
     }
     glEnd();
     glDisable(GL_TEXTURE_2D);
@@ -463,12 +495,19 @@ void display(void)
         SpawnInimigos();
     }
 
+
     glClearColor(0.8, 0.8, 0.8, 0.0); /* fog color */
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   // Turn lights off/on.
-   // Fog controls.
-   if (fogOn) glEnable(GL_FOG); else glDisable(GL_FOG);
+    glEnable(GL_DEPTH_TEST);
+
+    // Turn lights off/on.
+    // Fog controls.
+    if (fogOn)
+        glEnable(GL_FOG);
+    else
+        glDisable(GL_FOG);
     {
         glFogfv(GL_FOG_COLOR, fogColor);
         glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -476,7 +515,6 @@ void display(void)
         glFogf(GL_FOG_END, 32.0);
         glHint(GL_FOG_HINT, GL_NICEST);
     }
-
 
     glLoadIdentity();
 
@@ -507,7 +545,7 @@ void display(void)
     glPushMatrix();
     glColor3f(1.0, 0.0, 0.0);
     if (isCollision)
-        drawBitmapText("Nao pode - vai colidir!", -28.0, 25.0, -30.0);
+
     glPopMatrix();*/
 
     //Se o jogo já começou, inicia o personagem e desenha o personagem
@@ -559,11 +597,13 @@ static void key(unsigned char key, int x, int y)
         exit(0); //Sair do jogo
         break;
     case 'w':
+        isJumping = true;
         esfera.velocidade.y +=10; // Permite pular na direcao y // Permite pular na direcao y
         //sphere.posicao.y += 3.65f;
         //printf("%f", sphere.posicao.y);
         break;
     case 'a':
+        if(isJumping == false){
         // Trava a esfera em x para não ultrapassar o limite da faixa da esquerda
         if(esfera.posicao.x<=-2.5)
         {
@@ -572,8 +612,10 @@ static void key(unsigned char key, int x, int y)
         {
             esfera.posicao.x -= 2.5; // Permite andar para faixa da esquerda na direcao x
         }
+        }
         break;
     case 'd':
+        if(isJumping == false){
         // Trava a esfera em x para não ultrapassar o limite da faixa da direita
         if(esfera.posicao.x>=2.5)
         {
@@ -582,6 +624,7 @@ static void key(unsigned char key, int x, int y)
         {
             esfera.posicao.x += 2.5; // Permite andar para faixa da direita na direcao x
         }
+        }
         break;
     case 'r': //Reseta o jogo
         //Reinicia a posicao da esfera
@@ -589,14 +632,15 @@ static void key(unsigned char key, int x, int y)
         esfera.posicao.y=0;
         break;
     case 'f': //ativa e desliga o fog
-		 if (fogOn)
-         {
+        if (fogOn)
+        {
             fogOn = 0;
-         } else
-         {
+        }
+        else
+        {
             fogOn = 1;
-         }
-		 glutPostRedisplay();
+        }
+        glutPostRedisplay();
         break;
     }
     glutPostRedisplay();
@@ -613,11 +657,12 @@ void printInteraction(void)
          << "Pressione Q para sair." << endl;
 }
 
-void loadAllTextures() {
-	trilhoTex = LoadTexture("rails.bmp");
-	chaoTex = LoadTexture("grass.bmp");
-	ceuTex = LoadTexture("sky.bmp");
-	tunelTex = LoadTexture("tunel.bmp");
+void loadAllTextures()
+{
+    trilhoTex = LoadTexture("rails.bmp");
+    chaoTex = LoadTexture("grass.bmp");
+    ceuTex = LoadTexture("sky.bmp");
+    tunelTex = LoadTexture("tunel.bmp");
 }
 
 
@@ -646,7 +691,7 @@ int main(int argc, char **argv)
     glutKeyboardFunc(key);
     glutDisplayFunc(display);
     glutIdleFunc(idle);
-    glutFullScreen();             // Put into full screen
+    //glutFullScreen();             // Put into full screen
     loadAllTextures();
     glutMainLoop();
 
