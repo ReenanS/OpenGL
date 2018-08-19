@@ -3,13 +3,14 @@
  *
  * Desenvolvido por Renan Souza Silva em Agosto 2018
  *
- * Esse programa is test harness for the sphere, cone
- * and torus shapes in GLUT.
+ * Esse programa é baseada no jogo Subway Surfers. Com perspectiva 3D, o jogo importa arquivos
+ * 3D STL e carrega o modelo para criacao dos inimigos, cria texturas BMP, FOG, e a mecânica do pulo segue os principios da fisica.
  *
- * Spinning wireframe and smooth shaded shapes are
- * displayed until the ESC or q key is pressed.  The
- * number of geometry stacks and slices can be adjusted
- * using the + and - keys.
+ * Controles:
+ * W - Personagem pula
+ * A e D - Movimenta para esquerda e direita
+ * R - Reseta a posicao da bolinha
+ * F - Ativa/Desativa o FOG
  */
 
 #include <stdio.h>
@@ -29,42 +30,45 @@
 
 using namespace std;
 
+//Definicao da gravidade
+#define gravidade 9.81
+
 // Variaveis Globais
 
-// Variavel que determina a quantidade de inimigos do jogo
-const int quantidadeInimigo = 100;
+// Define a quantidade de inimigos do jogo
+const int quantidadeInimigo = 10;
 
-// Determina os pontos de vida para definir quando morre
+//Define os pontos de vida do personagem
 int quantidadeVida = 3;
 
-// Determina o raio da esfera
+//Define o raio da esfera
 float raio = 0.625f;
 
 //Variaveis do FOG
-static int fogOn = 0; // Fog on?
-GLfloat fogColor[3] = {0.8f, 0.8f, 0.8f}; // Define a nice light grey
-//char *TEXT_ID_ARRAY[] = {"cubo.stl","sphere.stl"};
+bool fogLigado = false; //O Fog está ligado? Não!
+GLfloat corFog[3] = {0.8f, 0.8f, 0.8f}; //Define uma luz cinza para o FOG
 
+//Variavel do Modelo 3D STL
 STL modelo;
 
-//Variaveis da textura
-//static int textureOn = 1; // Fog on?
+//Define o tempo para aparecer os inimigos
+float tempo = 6.0f;
 
-float tempo = 6;
+bool estaPulando = false; //O personagem está pulando? Nao!
 
-bool isJumping = false; // Ta pulando? Nao
+// Variavel que bloqueia os movimentos do personagem (Principalmente ao acabar o jogo)
+int jogoTravado = 0;
 
-//Textura
-
+//Variaveis da Textura
 GLuint trilhoTex;
 GLuint chaoTex;
 GLuint ceuTex;
 GLuint tunelTex;
+GLuint muroTex;
 
-//Definição das estruturas
+//Estruturas
 
-// Criando um (estrutura) objeto - esfera
-
+//Criando uma (estrutura) objeto - esfera
 struct Coordenada
 {
     float x,y,z;
@@ -72,302 +76,330 @@ struct Coordenada
 
 struct Objeto3D
 {
-    Coordenada posicao;
-    Coordenada velocidade;
+    Coordenada posicao; //Posicao da esfera
+    Coordenada velocidade; //Velocidade da esfera
 };
 
 Objeto3D esfera;
 
-// Criando um (estrutura) objeto inimigo (trem)
-
+//Criando uma (estrutura) objeto - inimigo (trem)
 struct Objeto3DInimigo
 {
     Coordenada posicao;
-    bool isVivo;
+    bool estaVivo;
 };
 
 Objeto3DInimigo trem;
 
-Objeto3DInimigo vetInimigo[quantidadeInimigo];
+Objeto3DInimigo vetInimigo[quantidadeInimigo]; //Vetor com a quantidade de inimigos do jogo
 
 void display();
-void drawBitmapText(char *string, float x, float y, float z);
+void desenhaStringNaTela(char *string, float x, float y, float z);
 
-#define GRAVITY 9.81
+// ******************************************************************************************************
+// Inicio das funções que desenham
+// ******************************************************************************************************
 
-void drawBitmapText(char *string, float x, float y, float z)
-{
-    char *c;
-    glRasterPos3f(x, y, z);//define position on the screen where to draw text.
-
-    for (c = string; *c != '\0'; c++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
-    }
-}
-
-
-void SpawnInimigos() //criar meu inimigo no vetor //seta as posições do inimiogs / trem
-{
-    for ( int i = 0; i < quantidadeInimigo; i++ )
-    {
-        if(vetInimigo[i].isVivo == true) //ve no vetor inimigos se tem espaço livre
-        {
-
-        }
-        else
-        {
-            float vet[]= {-2.5, 0.0, 2.5};
-            vetInimigo[i].posicao.x = vet[rand()%3]; //Achou morto
-            //printf("%f \n", vetInimigo[i].posicao.x);
-            vetInimigo[i].posicao.y = 0;
-            vetInimigo[i].posicao.z = -100;
-            vetInimigo[i].isVivo = true;
-            //printf("beef de calabresa posicao x escolhida %f e i escolhido %d",   vetInimigo[i].posicao.x, i);
-            return;
-        }
-    }
-
-
-}
-
-float SmoothMovement(float flGoal, float flCurrent, float dt)
-{
-    float flDifference = flGoal - flCurrent;
-
-    if (flDifference > dt)
-        return flCurrent + dt;
-    if (flDifference < -dt)
-        return flCurrent - dt;
-
-    return flGoal;
-}
-
-
-// In this Update() function we need to update all of our characters. Move them around or whatever we want to do.
-void RunPhysics(float dt)
-{
-
-    esfera.velocidade.y=esfera.velocidade.y-GRAVITY*dt; //degivada do espaco
-
-    esfera.posicao.x=esfera.posicao.x+esfera.velocidade.x*dt;
-    esfera.posicao.y=esfera.posicao.y+esfera.velocidade.y*dt;
-    esfera.posicao.z=esfera.posicao.z+esfera.velocidade.z*dt;
-    //sphere.velocity.y=0;
-
-    //lançamento para cima a aceleração é negativa (g < 0).
-    //sphere.position.y = (sphere.velocity.y)*dt - (GRAVITY*dt*dt)/2;
-    //hmax = ((sphere.velocity.y)*(sphere.velocity.y))/(2*GRAVITY);
-    //sphere.position.x = (sphere.velocity.x)*dt;
-
-
-    /*if(sphere.velocity.y > 0)
-    {
-        sphere.position.y = (sphere.velocity.y)*dt - (GRAVITY*dt*dt)/2;
-    }/*
-    //And just for now, let's make it so that if the vertical position is less than zero, we assume the character's on the ground.
-    if(sphere.position.y < 0.0)
-    {
-       sphere.position.y = 0;
-       //OnGroud = true;
-    } else if (sphere.position.y < 0.5 )
-    {
-        sphere.velocity.y=-GRAVITY*dt;
-        //sphere.velocity.y=-sphere.velocity.y;
-        //sphere.position.y = (sphere.velocity.y)*dt + (GRAVITY*dt*dt)/2;
-        //OnGroud = false;
-    }
-    */
-
-    if (esfera.velocidade.y<0)
-    {
-        //printf("%f", esfera.posicao.y);
-        // if((esfera.posicao.y > 1.9f) && (esfera.posicao.y < 2.0f)){
-        //        esfera.posicao.y = 2.0f;
-        //    printf("wasertfgyjg");
-        //            esfera.velocidade.y=esfera.velocidade.y+GRAVITY*dt; //degivada do espaco
-        //}
-        //sphere.position.y=0;
-        //if (esfera.posicao.y<0.5)
-        //{
-            //if ((sphere.position.x>=-2.5))
-           // esfera.velocidade.y=-GRAVITY*dt;
-         //  esfera.velocidade.y = 0;
-            //sphere.velocity.y=-sphere.velocity.y;
-        //}
-
-        if (esfera.posicao.y<0)
-        {
-            esfera.velocidade.y = 0;
-            esfera.posicao.y=0;
-            isJumping = false;
-        }
-
-        //sphere.velocity.y=-sphere.velocity.y;
-        //sphere.velocity.y=0;
-        //sphere.position.y=0;
-
-    }
-}
-
-void desenhaEstrada()
-{
-    glPushMatrix();
-    //Desenha Linha central
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, trilhoTex);
-    glBegin(GL_QUADS); //Desenha no sentido horario
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-1.25f,0.0f,2.0f); //Vertice inferior esquerdo
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(-1.25f,0.0f,-100.0f); //Vertice superior esquerdo
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(1.25f,0.0f,-100.0f); //Vertice superior direito
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(1.25f,0.0f,2.0f); //Vertice inferior direito
-    }
-    glEnd();
-
-    //Desenha Linha da direita
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(1.25f,0.0f,2.0f);
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(3.75f,0.0f,2.0f);
-    }
-    glEnd();
-
-    //Desenha Linha da esquerda
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-3.75f,0.0f,2.0f);
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(-3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(-1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(-1.25f,0.0f,2.0f);
-    }
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-}
-
+//Essa funcao desenha o objeto esfera
 void desenhaEsfera()
 {
-    glPushMatrix();
-
-    glTranslated(esfera.posicao.x,esfera.posicao.y+raio,0);
-    //glTranslatef(0,0,0);
-    //glColor3f(0.0f,0.0f,1.0f);
-    glutSolidSphere(raio,20,20);
-    //glScalef(1.2,1.2,5);
-    //DesenharSTL(modelo2);
-
-    glPopMatrix();
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glColor3f(0.0f,0.0f,1.0f); //Define uma cor para esfera
+        glTranslated(esfera.posicao.x,esfera.posicao.y+raio,0); //Desenha a esfera descolado
+        glutSolidSphere(raio,30,30); //Cria uma esfera solida com uma raio determinado e a quantidade de "slices" e "stacks"
+    glPopMatrix(); //Restaura as transformações anteriores
 }
 
-// Comparacao de colisao do personagem (esfera) com os trem (cubo) - Colisao AABB
-bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
+//Essa funcao desenha a estrada (3 linhas paralelas - esquerda, central, direita) e aplica textura em seus vertices
+void desenhaEstrada()
 {
-    // Verificar se houve colisao - metodo AABB - para eixos x e z
-    if((esfera.posicao.x < trem.posicao.x + 2.5) && (esfera.posicao.x +  raio > trem.posicao.x) &&
-            (esfera.posicao.z < trem.posicao.z + 2.5) && (esfera.posicao.z + raio > trem.posicao.z))
-    {
-        return true;
-        if(trem.posicao.y = 2.5)
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glEnable(GL_TEXTURE_2D); //Ativa a textura
+        glBindTexture(GL_TEXTURE_2D, trilhoTex); //"Liga" a textura com a imagem que ela deve ser mapeada
+        //Desenha Linha central
+        glBegin(GL_QUADS); //Desenha os verices no sentido horario
         {
-            //return true;
-            //glTranslatef(esfera.posicao.x, 4.5f, esfera.posicao.z);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.25f,0.0f,2.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 20.0f); glVertex3f(-1.25f,0.0f,-100.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 20.0f); glVertex3f(1.25f,0.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f);  glVertex3f(1.25f,0.0f,2.0f); //Aplica textura no Vertice inferior direito
         }
-    }
-    //}
-    // Se nao houve colisao
-    else
-    {
-        return false;
-    }
+        glEnd();
+
+        //Desenha Linha da direita
+        glBegin(GL_QUADS);
+        {
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(1.25f,0.0f,2.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 20.0f); glVertex3f(1.25f,0.0f,-100.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 20.0f); glVertex3f(3.75f,0.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(3.75f,0.0f,2.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+
+        //Desenha Linha da esquerda
+        glBegin(GL_QUADS);
+        {
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-3.75f,0.0f,2.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 20.0f); glVertex3f(-3.75f,0.0f,-100.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 20.0f); glVertex3f(-1.25f,0.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.25f,0.0f,2.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D); //Desativa a textura
+    glPopMatrix(); //Restaura as transformações anteriores
 }
 
-
-//Desenha X Trem aleatoriamente
+//Essa funcao desenha trem a partir do modelo STL 3D
 void desenhaTrem(struct Objeto3DInimigo trem)
 {
     float vet[]= {-2.5, 0.0, 2.5}; //Vetor de posicao (faixa esquerda, central, direita) para desenhar o trem
 
     for (int i = 0; i < 2; i++) // Varre todo o vetor de posicao do trem
     {
-        glPushMatrix();
+        glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+            glTranslatef(trem.posicao.x-0.625, trem.posicao.y, trem.posicao.z); //Desenha o trem descolado (Para ficar junto com o trilho)
+            glScalef(2.5,2.5,37); //Aumenta a escala do objeto (x,y,z) em relação ao original
+            DesenharSTL(modelo); //Desenha modelo 3D
+        glPopMatrix(); //Restaura as transformações anteriores
+    }
+}
 
-        glTranslatef(trem.posicao.x-0.625, trem.posicao.y, trem.posicao.z);
-        //Escala e Desenha modelo 3D
-        glScalef(2.5,2.5,37);
-        DesenharSTL(modelo);
-
-        if(objetoColidiu(esfera,trem))
+//Essa funcao desenha o chao (como se fosse um plano)
+void desenhaChao()
+{
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glEnable(GL_TEXTURE_2D); //Ativa a textura
+        glBindTexture(GL_TEXTURE_2D, chaoTex); //"Liga" a textura com a imagem que ela deve ser mapeada
+        glTranslatef(0.0,-0.01,0.0); //Desenha o chao descolado (define o y negativo para ficar levemente abaixo das estradas)
+        //Desenha um plano (chao)
+        glBegin(GL_QUADS); //Desenha os verices no sentido horario
         {
-            //printf("Colidiu");
-            quantidadeVida = quantidadeVida - 1;
-            printf("%f",quantidadeVida);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-6.25f, 0.0f, 2.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 20.0f); glVertex3f(-6.25f, 0.0f, -100.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 20.0f); glVertex3f(6.25f, 0.0f, -100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(6.25f, 0.0f, 2.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D); //Desativa a textura
+    glPopMatrix(); //Restaura as transformações anteriores
+}
+
+//Essa funcao desenha o muro
+void desenhaMuro()
+{
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glEnable(GL_TEXTURE_2D); //Ativa a textura
+        glBindTexture(GL_TEXTURE_2D, muroTex); //"Liga" a textura com a imagem que ela deve ser mapeada
+        //Desenha um muro (parede)
+        glBegin(GL_QUADS); //Desenha os verices no sentido horario
+        {
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-6.05f,0.0f,0.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-6.05f,3.0f,0.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(-6.05f,3.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(-6.05f,0.0f,-100.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+
+        glBegin(GL_QUADS); //Desenha os verices no sentido horario
+        {
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(6.05f,0.0f,0.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(6.05f,3.0f,0.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(6.05f,3.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(6.05f,0.0f,-100.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+
+        glDisable(GL_TEXTURE_2D); //Desativa a textura
+    glPopMatrix(); //Restaura as transformações anteriores
+}
+
+//Essa funcao desenha o tunel
+void desenhaTunel()
+{
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glEnable(GL_TEXTURE_2D); //Ativa a textura
+        glBindTexture(GL_TEXTURE_2D, tunelTex); //"Liga" a textura com a imagem que ela deve ser mapeada
+        //Desenha Tunel
+        glBegin(GL_QUADS); //Desenha os verices no sentido horario
+        {
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-6.25f,0.0f,-100.0f); //Aplica textura no Vertice inferior esquerdo
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-6.25f,10.0f,-100.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(6.25f,10.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(6.25f,0.0f,-100.0f); //Aplica textura no Vertice inferior direito
+        }
+        glEnd();
+        glDisable(GL_TEXTURE_2D); //Desativa a textura
+    glPopMatrix(); //Restaura as transformações anteriores
+}
+
+//Essa funcao escreve um string na tela
+void desenhaStringNaTela(char *string, float x, float y, float z)
+{
+    char *c;
+    glRasterPos3f(x, y, z);//Define a posicao da tela onde o texto vai ser escrito
+
+    for (c = string; *c != '\0'; c++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c); //Define o tipo de fonte
+    }
+}
+
+// ******************************************************************************************************
+// Inicio das funções que definem a logica de programação do jogo
+// ******************************************************************************************************
+
+//Essa funcao cria um inimigo (trem) no vetor e define as posições do inimigos (trem)
+void DefinePosicaoInimigos()
+{
+    for (int i = 0; i < quantidadeInimigo; i++) //Laço de repeticao para varrer de 0 até o valor quantidadeInimigo
+    {
+        if(vetInimigo[i].estaVivo == true) //Verifica se no vetor inimigos tem espaço livre
+        {
+            //Se verdadeiro, não faz nada
         }
         else
         {
-            //printf("Nao Colidiu");
+            float vet[]= {-2.5, 0.0, 2.5}; //Vetor com as posicoes da estrada (esquerda, central, direita)
+            vetInimigo[i].posicao.x = vet[rand()%3]; //Randomiza a posicao do inimigo no eixo x
+            vetInimigo[i].posicao.y = 0; //Define posicao do inimigo em y = 0
+            vetInimigo[i].posicao.z = -100; //Define a posicao do inimigo em z = -100 (impressao de que os objetos vem do infinito)
+            vetInimigo[i].estaVivo = true; //Define que no vetor inimigo tem espaço livre
+            return;
         }
-
-        glPopMatrix();
     }
-
 }
 
-
-void AtualizarPosicao() //Atualiza e desenha meu inimigo
+//Essa funcao atualiza posicao do inimigo (trem), verifica se colidiu e desenha o trem
+void AtualizarPosicao()
 {
-    for ( int i = 0; i < quantidadeInimigo; i++ ) // Varre todo o vetor de quantidade de inimigos
+    for (int i = 0; i < quantidadeInimigo; i++) //Laço de repeticao para varrer de 0 até o valor quantidadeInimigo
     {
-        if(vetInimigo[i].isVivo == true) //Verifica se no vetor inimigos tem espaço livre
+        if(vetInimigo[i].estaVivo == true) //Verifica se no vetor inimigos tem espaço livre
         {
-            //vetInimigo[i];
-            vetInimigo[i].posicao.z += 0.1f; //Se tá vivo ele muda a posicao e vem até o personagem
-            // Ajusta velocidade do trem
-
-            if(vetInimigo[i].posicao.z > 2)
+            vetInimigo[i].posicao.z += 0.1f; //Se tá vivo ele muda a posicao e vem até o personagem - Ajusta velocidade do trem
+            if(objetoColidiu(esfera,vetInimigo[i])) //
             {
-                vetInimigo[i].isVivo = false; //o trem tá morto
+                    if(esfera.posicao.y > 1.9f)
+                    {
+                        estaPulando = true;
+                    }
+                    //Se colidiu
+                    vetInimigo[i].estaVivo = false; //Define que o trem está morto
+                    quantidadeVida = quantidadeVida - 1; //Subtrai um da quantidade de vida do personagem
             }
             else
             {
-                //vetInimigo[i].posicao.z = vetInimigo[rand()%3]; //Achou morto
-                //printf("%f \n", vetInimigo[i].posicao.z);//desce a posição em z e desenha inimigo
-                desenhaTrem(vetInimigo[i]);
+               estaPulando = false;
             }
-
+            if(vetInimigo[i].posicao.z > 2) //Se o trem passou de uma certa posicao de z, o trem "morre"
+            {
+                vetInimigo[i].estaVivo = false; //Define que o trem está morto
+            }
+            else
+            {
+                desenhaTrem(vetInimigo[i]); //Desenha objeto inimigo - trem
+            }
         }
     }
 }
 
+// ******************************************************************************************************
+// Inicio da mecanica de colisão
+// ******************************************************************************************************
+
+//Essa funcao compara a colisao do personagem (esfera) com os inimigos (trem - cubo) - Colisao AABB
+bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
+{
+    //Verifica se houve colisao para os eixos X e Z - Metodo AABB
+    if((esfera.posicao.x < trem.posicao.x + 2.5) && (esfera.posicao.x +  raio > trem.posicao.x) &&
+            (esfera.posicao.z < trem.posicao.z + 2.5) && (esfera.posicao.z + raio > trem.posicao.z))
+    {
+        return true; //Retorna verdadeiro se houve colisao
+    }
+    else
+    {
+        return false; //Retorna falso se não houve colisao
+    }
+}
+
+// ******************************************************************************************************
+// Inicio da física do jogo
+// ******************************************************************************************************
+
+//Essa função define toda a mecanica de física do jogo
+void Fisica(float dt)
+{
+    esfera.velocidade.y = esfera.velocidade.y - gravidade*dt; //Função horario da velocidade
+    esfera.posicao.y = esfera.posicao.y + esfera.velocidade.y*dt - 0.5*gravidade*dt*dt; //Função horario do espaço
+
+    if (esfera.velocidade.y<0)
+    {
+        if(estaPulando == true)
+        {
+            if((esfera.posicao.y > 1.9f) && (esfera.posicao.y < 2.0f))
+            {
+                esfera.posicao.y = 2.0f;
+                esfera.velocidade.y = esfera.velocidade.y + gravidade*dt;
+            }
+        }
+
+        if (esfera.posicao.y<0) //Se a posicao vertical é menor que zero, assume que o personagem está no chao.
+        {
+            esfera.velocidade.y = 0;
+            esfera.posicao.y=0;
+            estaPulando = false;
+        }
+    }
+}
+
+// ******************************************************************************************************
+// Inicio do carregamento da textura
+// ******************************************************************************************************
+
+//Funcao para definir e carregar todas as texturas utilizadas durante o jogo
+void carregarTodasTexturas()
+{
+    trilhoTex = LoadTexture("rails.bmp");
+    chaoTex = LoadTexture("grass.bmp");
+    ceuTex = LoadTexture("sky.bmp");
+    tunelTex = LoadTexture("tunel.bmp");
+    muroTex = LoadTexture("muro.bmp");
+}
+
+//Rotina para gerar instruções de interação na janela do C ++
+void InteracaoPrint(void)
+{
+    cout << "Interacao:" << endl;
+    cout << "Pressione as teclas de A, W, S, D para mover a esfera." << endl
+         << "Pressione R para redefinir." << endl
+         << "Pressione F para ativar ou desativar o FOG." << endl
+         << "Pressione Q para sair." << endl
+         << "Por favor, nao ativar o Caps Lock." << endl;
+}
+
+// ******************************************************************************************************
+// Inicio das rotinas do OpenGL GLUT
+// ******************************************************************************************************
+
 void idle()
 {
-    RunPhysics(0.01);
+    Fisica(0.01);
     display();
 }
 
+//Função que inicia a renderização 3D
 static void init(void)
 {
-    //Lighting set up
+    // Lighting set up
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+    glEnable(GL_LIGHTING); //Ativa a iluminação
+    glEnable(GL_LIGHT0); //Ativa a luz#0
 
     // Set lighting intensity and color
-    GLfloat qaAmbientLight[] = {1.0, 1.0, 1.0, 0.0};
-    GLfloat qaDiffuseLight[] = { 0.8, 0.8, 0.8, 1 };
+    GLfloat qaAmbientLight[] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat qaDiffuseLight[] = { 5, 5, 5, 1 };
     GLfloat qaSpecularLight[]	= {0.8, 0.8, 0.8, 1.0};
     glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
@@ -380,109 +412,11 @@ static void init(void)
 
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-
+    glEnable(GL_DEPTH_TEST);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL) ;
 }
 
-void greenGround()
-{
-    glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, chaoTex);
-    glTranslatef(0.0,-0.01,0.0);
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-6.25f, 0.0f, 2.0f);
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(-6.25f, 0.0f, -100.0f);
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(6.25f, 0.0f, -100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(6.25f, 0.0f, 2.0f);
-    }
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-
-}
-
-void desenhaParede()
-{
-    glPushMatrix();
-    //Desenha Linha central
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, tunelTex);
-    glBegin(GL_QUADS); //Desenha no sentido horario
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(6.25f,0.0f,0.0f); //Vertice inferior esquerdo
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(6.25f,2.0f,-100.0f); //Vertice superior esquerdo
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(8.75f,2.0f,-100.0f); //Vertice superior direito
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(8.75f,0.0f,0.0f); //Vertice inferior direito
-    }
-    glEnd();
-
-    //Desenha Linha da direita
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-6.25f,0.0f,0.0f);
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(-6.25f,2.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(-8.75f,2.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(-8.75f,0.0f,0.0f);
-    }
-    glEnd();
-
-    //Desenha Linha da esquerda
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-3.75f,0.0f,0.0f);
-        glTexCoord2f(0.0f, 20.0f);
-        glVertex3f(-3.75f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 20.0f);
-        glVertex3f(-1.25f,0.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(-1.25f,0.0f,0.0f);
-    }
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-
-
-}
-
-void desenhaTunel()
-{
-    //glColor3f(1.0f,0.0f,0.0f);
-    glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, tunelTex);
-    //Desenha Tunel
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.0f, 0.0f);
-        glVertex3f(-6.25f,0.0f,-100.0f);
-        glTexCoord2f(0.0f, 1.0f);
-        glVertex3f(-6.25f,10.0f,-100.0f);
-        glTexCoord2f(1.0f, 1.0f);
-        glVertex3f(6.25f,10.0f,-100.0f);
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(6.25f,0.0f,-100.0f);
-    }
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-}
-
-// Drawing routine. DrawScene
+//Rotina para exibição na tela.
 void display(void)
 {
     if(tempo > 0.2f)
@@ -491,103 +425,67 @@ void display(void)
     }
     else
     {
-        tempo = 6.0f;
-        SpawnInimigos();
+        tempo = 60.0f;
+        DefinePosicaoInimigos();
     }
 
-
-    glClearColor(0.8, 0.8, 0.8, 0.0); /* fog color */
+    glClearColor(0.8, 0.8, 0.8, 0.0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnable(GL_DEPTH_TEST);
-
-    // Turn lights off/on.
-    // Fog controls.
-    if (fogOn)
-        glEnable(GL_FOG);
+    //Controle do FOG - Ativa e Desativa
+    if (fogLigado)
+        glEnable(GL_FOG); //Ativa o FOG
     else
-        glDisable(GL_FOG);
+        glDisable(GL_FOG); //Desativa o FOG
     {
-        glFogfv(GL_FOG_COLOR, fogColor);
-        glFogi(GL_FOG_MODE, GL_LINEAR);
-        glFogf(GL_FOG_START, 17.0);
-        glFogf(GL_FOG_END, 32.0);
+        glFogfv(GL_FOG_COLOR, corFog); //Define a cor do FOG
+        glFogi(GL_FOG_MODE, GL_LINEAR); //Define o modo do FOG (Linear, EXP, EXP2)
+        glFogf(GL_FOG_START, 17.0); //Define quao perto da tela o FOG deve começar
+        glFogf(GL_FOG_END, 32.0); //Define quao longe da tela o FOG deve terminar
         glHint(GL_FOG_HINT, GL_NICEST);
     }
 
-    glLoadIdentity();
+    glLoadIdentity(); //Reinicializa as transformações
 
     //Define a posição da camera
-    glTranslatef(0.0f,-2.0f,-7.0f);
-    glRotatef(20.0f,1.0f,0.0f,0.0f);
+    glTranslatef(0.0f,-2.0f,-7.0f); //Descola a cena -2 unidades em X e -7 em Y
+    glRotatef(20.0f,1.0f,0.0f,0.0f); //Gira a cena 20 graus ao redor do eixo X
 
-    greenGround(); //Nao é no displau
+    desenhaEsfera(); //Desenha Esfera
+    desenhaEstrada(); //Desenha Estrada
+    desenhaChao(); //Desenha Chao
+    desenhaTunel(); //Desenha Tunel
+    desenhaMuro(); //Desenha Muro
+    AtualizarPosicao(); //Atualiza Posicao do Trem
 
-    desenhaEsfera();
-
-    //Desenha estrada
-    desenhaEstrada();
-
-    desenhaTunel();
-
-    //desenhaParede();
-
-    // Desenha esfera
-    //if(checaColisaoBox() == true)
-    //{
-
-    //}
-
-    AtualizarPosicao(); //Nao é no displau
-
-    /* Escreve texto isolado (antes gluLookAt) .
-    glPushMatrix();
-    glColor3f(1.0, 0.0, 0.0);
-    if (isCollision)
-
-    glPopMatrix();*/
-
-    //Se o jogo já começou, inicia o personagem e desenha o personagem
-    /*
-    if(!gameStarted)
+    //Caso o personagem morreu após as colisoes
+    if(quantidadeVida == 0)
     {
-    // Defina a posição da esfera.
-    //glTranslatef(Xvalue, Yvalue,-7.0);
-    // Apply equations of motion to transform sphere.
-    glTranslatef(Xvalue, voy*t - (g/2.0)*t*t, -7.0);
-    glRotatef(Angle,1.0,0.0,0.0);
+        desenhaStringNaTela("Voce morreu! Aperte R para reiniciar", 2 , 3.5, -2); //Escreve na tela que morreu
+    }
 
-    //Desenha a esfera
-    glColor3f(0.0, 0.0, 1.0);
-    glutSolidSphere(0.77f,20,20);
+    glColor3f(0, 0, 1);
+    char strBuf[15];
+    sprintf(strBuf,"Vida : %d ",quantidadeVida);
+    desenhaStringNaTela(strBuf, 2,4, -2);
 
-    */
-
-    //glColor3f(0, 1, 0);
-    //drawBitmapText("Vida:", 0, 0, 0);
-    //drawBitmapText("Tempo:", 0, 2, 0);
-
-    /* calculate the delta time between frames
-     int time = glutGet(GLUT_ELAPSED_TIME);
-     delta = ((GLfloat) time - game.time) / 1000.0;
-     game.time = time;*/
-
-    glutSwapBuffers();
+    glFlush(); //Esvazia todos os buffers
+    glutSwapBuffers(); //Troca os buffers da janela atual se estiver em buffer duplo.
 
 }
 
-// Janela OpenGL reformula a rotina.
+//Janela OpenGL reformula a rotina.
 static void resize(int width, int height)
 {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    glLoadIdentity(); //Reinicializa as transformações
     gluPerspective(45, (GLdouble)width/(GLdouble)height,1,400);
     glMatrixMode(GL_MODELVIEW);
 }
 
-//Rotina de processamento de entrada de teclado.
+//Rotina de processamento da entrada do teclado
 static void key(unsigned char key, int x, int y)
 {
     switch (key)
@@ -597,81 +495,61 @@ static void key(unsigned char key, int x, int y)
         exit(0); //Sair do jogo
         break;
     case 'w':
-        isJumping = true;
-        esfera.velocidade.y +=10; // Permite pular na direcao y // Permite pular na direcao y
-        //sphere.posicao.y += 3.65f;
-        //printf("%f", sphere.posicao.y);
+        estaPulando = true; //Define que o personagem está pulando
+        esfera.velocidade.y +=10; //Permite pular ("impulso") na direcao y
         break;
     case 'a':
-        if(isJumping == false){
-        // Trava a esfera em x para não ultrapassar o limite da faixa da esquerda
-        if(esfera.posicao.x<=-2.5)
+        if(estaPulando == false)
         {
-        }
-        else
-        {
-            esfera.posicao.x -= 2.5; // Permite andar para faixa da esquerda na direcao x
-        }
+            // Trava a esfera em x para não ultrapassar o limite da faixa da esquerda
+            if(esfera.posicao.x<=-2.5)
+            {
+            }
+            else
+            {
+                esfera.posicao.x -= 2.5; // Permite andar para faixa da esquerda na direcao x
+            }
         }
         break;
     case 'd':
-        if(isJumping == false){
-        // Trava a esfera em x para não ultrapassar o limite da faixa da direita
-        if(esfera.posicao.x>=2.5)
+        if(estaPulando == false)
         {
-        }
-        else
-        {
-            esfera.posicao.x += 2.5; // Permite andar para faixa da direita na direcao x
-        }
+            // Trava a esfera em x para não ultrapassar o limite da faixa da direita
+            if(esfera.posicao.x>=2.5)
+            {
+            }
+            else
+            {
+                esfera.posicao.x += 2.5; // Permite andar para faixa da direita na direcao x
+            }
         }
         break;
     case 'r': //Reseta o jogo
-        //Reinicia a posicao da esfera
-        esfera.posicao.x=0;
-        esfera.posicao.y=0;
+            //Reinicia a posicao da esfera
+            esfera.posicao.x = 0;
+            esfera.posicao.y = 0;
+            //Reinicia a quantidade de vida
+            quantidadeVida = 3;
         break;
-    case 'f': //ativa e desliga o fog
-        if (fogOn)
+    case 'f': //Ativa e Desliga o FOG atraves de um flag
+        if (fogLigado)
         {
-            fogOn = 0;
+            fogLigado = false;
         }
         else
         {
-            fogOn = 1;
+            fogLigado = true;
         }
-        glutPostRedisplay();
         break;
     }
     glutPostRedisplay();
 }
 
-// Rotina para gerar instruções de interação na janela do C ++.
-void printInteraction(void)
-{
-    cout << "Interacao:" << endl;
-    cout << "Pressione as teclas de A, W, S, D para mover a esfera." << endl
-         << "Pressione R para redefinir." << endl
-         << "Pressione I para iniciar o jogo." << endl
-         << "Pressione F para ativar ou desativar o FOG." << endl
-         << "Pressione Q para sair." << endl;
-}
-
-void loadAllTextures()
-{
-    trilhoTex = LoadTexture("rails.bmp");
-    chaoTex = LoadTexture("grass.bmp");
-    ceuTex = LoadTexture("sky.bmp");
-    tunelTex = LoadTexture("tunel.bmp");
-}
-
-
-/* Program entry point */
-// Rotina principal.
+//Rotina principal.
 int main(int argc, char **argv)
 {
     srand(time(NULL)); // Randomiza o rand()
-    printInteraction();
+    InteracaoPrint();
 
     glutInit(&argc, argv);
     glutInitWindowSize(600,600);
@@ -679,22 +557,17 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     glutCreateWindow("GLUT Subway Surfers");
-    init();
 
-    //Lê arquivo .STL
-    LerArquivo(&modelo, "cubo.stl");
-    //printf("Nome: %s\n", modelo.nome);
-    //printf("Numero de faces: %i\n", modelo.nFaces);
-    //LerArquivo(&modelo2, "sphere.stl");
+    init();
+    LerArquivo(&modelo, "cubo.stl"); //Lê arquivo .STL
 
     glutReshapeFunc(resize);
     glutKeyboardFunc(key);
     glutDisplayFunc(display);
     glutIdleFunc(idle);
-    //glutFullScreen();             // Put into full screen
-    loadAllTextures();
+    glutFullScreen(); //Coloca a janela no modo full screen
+    carregarTodasTexturas(); //Carrega todas as texturas
     glutMainLoop();
 
     return EXIT_SUCCESS;
 }
-
