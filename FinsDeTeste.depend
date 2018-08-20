@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1534708982 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
+1534727523 source:c:\users\user\desktop\finsdeteste\importarstl.cpp
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -38,7 +38,7 @@
 
 1533615495 c:\users\user\desktop\finsdeteste\importarstl.h
 
-1534643404 source:c:\users\user\desktop\finsdeteste\lerbmp.cpp
+1534720551 source:c:\users\user\desktop\finsdeteste\lerbmp.cpp
 	"LerBMP.h"
 	<stdio.h>
 	<stdlib.h>
@@ -47,7 +47,7 @@
 1534395120 c:\users\user\desktop\finsdeteste\lerbmp.h
 	<GL/gl.h>
 
-1534711807 source:c:\users\user\desktop\finsdeteste\main.cpp
+1534728374 source:c:\users\user\desktop\finsdeteste\main.cpp
 	<stdio.h>
 	<time.h>
 	<stdlib.h>

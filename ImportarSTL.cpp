@@ -5,6 +5,8 @@
 #include <gl/glu.h>
 #include "ImportarSTL.h"
 
+// Codigo fonte do ImportarSTL fornecido pelo Professor Scalco
+
 void LerArquivo(STL *modelo, char *arquivo)
 {
     FILE *arq;
@@ -155,7 +157,5 @@ void DesenharSTL(STL modelo){
             glVertex3f(modelo.faces[f].ponto[1].x, modelo.faces[f].ponto[1].y, modelo.faces[f].ponto[1].z);
             glVertex3f(modelo.faces[f].ponto[2].x, modelo.faces[f].ponto[2].y, modelo.faces[f].ponto[2].z);
         glEnd();
-
-        glDisable(GL_LIGHTING);
     }
 }

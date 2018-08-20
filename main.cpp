@@ -9,7 +9,7 @@
  * Controles:
  * W - Personagem pula
  * A e D - Movimenta para esquerda e direita
- * R - Reseta a posicao da bolinha
+ * R - Reinicia o jogo
  * F - Ativa/Desativa o FOG
  */
 
@@ -33,9 +33,9 @@ using namespace std;
 //Definicao da gravidade
 #define gravidade 9.81
 
-// Variaveis Globais
+//Variaveis Globais
 
-// Define a quantidade de inimigos do jogo
+//Define a quantidade de inimigos do jogo
 const int quantidadeInimigo = 10;
 
 //Define os pontos de vida do personagem
@@ -55,9 +55,6 @@ STL modelo;
 float tempo = 6.0f;
 
 bool estaPulando = false; //O personagem está pulando? Nao!
-
-// Variavel que bloqueia os movimentos do personagem (Principalmente ao acabar o jogo)
-int jogoTravado = 0;
 
 //Variaveis da Textura
 GLuint trilhoTex;
@@ -153,16 +150,11 @@ void desenhaEstrada()
 //Essa funcao desenha trem a partir do modelo STL 3D
 void desenhaTrem(struct Objeto3DInimigo trem)
 {
-    float vet[]= {-2.5, 0.0, 2.5}; //Vetor de posicao (faixa esquerda, central, direita) para desenhar o trem
-
-    for (int i = 0; i < 2; i++) // Varre todo o vetor de posicao do trem
-    {
-        glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
-            glTranslatef(trem.posicao.x-0.625, trem.posicao.y, trem.posicao.z); //Desenha o trem descolado (Para ficar junto com o trilho)
-            glScalef(2.5,2.5,37); //Aumenta a escala do objeto (x,y,z) em relação ao original
-            DesenharSTL(modelo); //Desenha modelo 3D
-        glPopMatrix(); //Restaura as transformações anteriores
-    }
+    glPushMatrix(); //Salva as transformações atuais na pilha interna do OpenGL
+        glTranslatef(trem.posicao.x-0.625, trem.posicao.y, trem.posicao.z); //Desenha o trem descolado (Para ficar junto com o trilho)
+        glScalef(2.5,2.5,37); //Aumenta a escala do objeto (x,y,z) em relação ao original
+        DesenharSTL(modelo); //Desenha modelo 3D
+    glPopMatrix(); //Restaura as transformações anteriores
 }
 
 //Essa funcao desenha o chao (como se fosse um plano)
@@ -196,8 +188,8 @@ void desenhaMuro()
         glBegin(GL_QUADS); //Desenha os verices no sentido horario
         {
             glTexCoord2f(0.0f, 0.0f); glVertex3f(-6.05f,0.0f,0.0f); //Aplica textura no Vertice inferior esquerdo
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-6.05f,3.0f,0.0f); //Aplica textura no Vertice superior esquerdo
-            glTexCoord2f(1.0f, 1.0f); glVertex3f(-6.05f,3.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-6.05f,4.0f,0.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(-6.05f,4.0f,-100.0f); //Aplica textura no Vertice superior direito
             glTexCoord2f(1.0f, 0.0f); glVertex3f(-6.05f,0.0f,-100.0f); //Aplica textura no Vertice inferior direito
         }
         glEnd();
@@ -205,8 +197,8 @@ void desenhaMuro()
         glBegin(GL_QUADS); //Desenha os verices no sentido horario
         {
             glTexCoord2f(0.0f, 0.0f); glVertex3f(6.05f,0.0f,0.0f); //Aplica textura no Vertice inferior esquerdo
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(6.05f,3.0f,0.0f); //Aplica textura no Vertice superior esquerdo
-            glTexCoord2f(1.0f, 1.0f); glVertex3f(6.05f,3.0f,-100.0f); //Aplica textura no Vertice superior direito
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(6.05f,4.0f,0.0f); //Aplica textura no Vertice superior esquerdo
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(6.05f,4.0f,-100.0f); //Aplica textura no Vertice superior direito
             glTexCoord2f(1.0f, 0.0f); glVertex3f(6.05f,0.0f,-100.0f); //Aplica textura no Vertice inferior direito
         }
         glEnd();
@@ -247,6 +239,25 @@ void desenhaStringNaTela(char *string, float x, float y, float z)
 }
 
 // ******************************************************************************************************
+// Inicio da mecanica de colisão
+// ******************************************************************************************************
+
+//Essa funcao compara a colisao do personagem (esfera) com os inimigos (trem - cubo) - Colisao AABB
+bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
+{
+    //Verifica se houve colisao para os eixos X e Z - Metodo AABB
+    if((esfera.posicao.x < trem.posicao.x + 2.5) && (esfera.posicao.x +  raio > trem.posicao.x) &&
+            (esfera.posicao.z < trem.posicao.z + 2.5) && (esfera.posicao.z + raio > trem.posicao.z))
+    {
+        return true; //Retorna verdadeiro se houve colisao
+    }
+    else
+    {
+        return false; //Retorna falso se não houve colisao
+    }
+}
+
+// ******************************************************************************************************
 // Inicio das funções que definem a logica de programação do jogo
 // ******************************************************************************************************
 
@@ -279,19 +290,13 @@ void AtualizarPosicao()
         if(vetInimigo[i].estaVivo == true) //Verifica se no vetor inimigos tem espaço livre
         {
             vetInimigo[i].posicao.z += 0.1f; //Se tá vivo ele muda a posicao e vem até o personagem - Ajusta velocidade do trem
-            if(objetoColidiu(esfera,vetInimigo[i])) //
+            if(objetoColidiu(esfera,vetInimigo[i])) //Se objeto colidiu com inimigo
             {
-                    if(esfera.posicao.y > 1.9f)
-                    {
-                        estaPulando = true;
-                    }
-                    //Se colidiu
                     vetInimigo[i].estaVivo = false; //Define que o trem está morto
-                    quantidadeVida = quantidadeVida - 1; //Subtrai um da quantidade de vida do personagem
-            }
-            else
-            {
-               estaPulando = false;
+                    if(quantidadeVida>0) //Nao deixa a vida negativa
+                    {
+                        quantidadeVida = quantidadeVida - 1; //Subtrai um da quantidade de vida do personagem
+                    }
             }
             if(vetInimigo[i].posicao.z > 2) //Se o trem passou de uma certa posicao de z, o trem "morre"
             {
@@ -299,28 +304,12 @@ void AtualizarPosicao()
             }
             else
             {
+                if(quantidadeVida>0) //Desenha objeto somente se o personagem tiver vida
+                {
                 desenhaTrem(vetInimigo[i]); //Desenha objeto inimigo - trem
+                }
             }
         }
-    }
-}
-
-// ******************************************************************************************************
-// Inicio da mecanica de colisão
-// ******************************************************************************************************
-
-//Essa funcao compara a colisao do personagem (esfera) com os inimigos (trem - cubo) - Colisao AABB
-bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
-{
-    //Verifica se houve colisao para os eixos X e Z - Metodo AABB
-    if((esfera.posicao.x < trem.posicao.x + 2.5) && (esfera.posicao.x +  raio > trem.posicao.x) &&
-            (esfera.posicao.z < trem.posicao.z + 2.5) && (esfera.posicao.z + raio > trem.posicao.z))
-    {
-        return true; //Retorna verdadeiro se houve colisao
-    }
-    else
-    {
-        return false; //Retorna falso se não houve colisao
     }
 }
 
@@ -334,22 +323,17 @@ void Fisica(float dt)
     esfera.velocidade.y = esfera.velocidade.y - gravidade*dt; //Função horario da velocidade
     esfera.posicao.y = esfera.posicao.y + esfera.velocidade.y*dt - 0.5*gravidade*dt*dt; //Função horario do espaço
 
-    if (esfera.velocidade.y<0)
+    if (esfera.velocidade.y < 0) //Se a velocidade da esfera for negativa (objeto caindo)
     {
-        if(estaPulando == true)
+        if(estaPulando == true) //Se o personagem está pulando
         {
-            if((esfera.posicao.y > 1.9f) && (esfera.posicao.y < 2.0f))
-            {
-                esfera.posicao.y = 2.0f;
-                esfera.velocidade.y = esfera.velocidade.y + gravidade*dt;
-            }
+                esfera.velocidade.y = esfera.velocidade.y - gravidade*dt; //A gravidade puxa ele para baixo
         }
-
-        if (esfera.posicao.y<0) //Se a posicao vertical é menor que zero, assume que o personagem está no chao.
+        if (esfera.posicao.y < 0) //Se a posicao vertical é menor que zero, assume que o personagem está no chao.
         {
-            esfera.velocidade.y = 0;
-            esfera.posicao.y=0;
-            estaPulando = false;
+            esfera.velocidade.y = 0; //Define a velocidade para 0
+            esfera.posicao.y = 0; //Define a posicao para 0
+            estaPulando = false; //Nao está pulando
         }
     }
 }
@@ -361,9 +345,10 @@ void Fisica(float dt)
 //Funcao para definir e carregar todas as texturas utilizadas durante o jogo
 void carregarTodasTexturas()
 {
-    trilhoTex = LoadTexture("rails.bmp");
-    chaoTex = LoadTexture("grass.bmp");
-    ceuTex = LoadTexture("sky.bmp");
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+
+    trilhoTex = LoadTexture("trilho.bmp");
+    chaoTex = LoadTexture("grama.bmp");
     tunelTex = LoadTexture("tunel.bmp");
     muroTex = LoadTexture("muro.bmp");
 }
@@ -373,7 +358,7 @@ void InteracaoPrint(void)
 {
     cout << "Interacao:" << endl;
     cout << "Pressione as teclas de A, W, S, D para mover a esfera." << endl
-         << "Pressione R para redefinir." << endl
+         << "Pressione R para reiniciar o jogo." << endl
          << "Pressione F para ativar ou desativar o FOG." << endl
          << "Pressione Q para sair." << endl
          << "Por favor, nao ativar o Caps Lock." << endl;
@@ -392,33 +377,29 @@ void idle()
 //Função que inicia a renderização 3D
 static void init(void)
 {
-    // Lighting set up
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+    GLfloat luzAmbiente[4] = {0.8f, 0.8f, 0.8f, 1.0f }; //Define a luz ambiente
+    GLfloat luzDifusa[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //Define a luz difusa
+    GLfloat luzEspecular[4]	= {1.0f, 1.0f, 1.0f, 1.0f }; //Define a luz especular
+    GLfloat posicaoLuz[] = { 0.0f, 0.0f, 0.0f, 1.0f }; //Define a posicao da luz
+
+    //Define parametros da luz de número 0
+    glLightfv(GL_LIGHT0, GL_AMBIENT, luzAmbiente);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, luzDifusa);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, luzEspecular);
+    glLightfv(GL_LIGHT0, GL_POSITION, posicaoLuz);
+
     glEnable(GL_LIGHTING); //Ativa a iluminação
     glEnable(GL_LIGHT0); //Ativa a luz#0
 
-    // Set lighting intensity and color
-    GLfloat qaAmbientLight[] = {0.8, 0.8, 0.8, 1.0};
-    GLfloat qaDiffuseLight[] = { 5, 5, 5, 1 };
-    GLfloat qaSpecularLight[]	= {0.8, 0.8, 0.8, 1.0};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, qaAmbientLight);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, qaDiffuseLight);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, qaSpecularLight);
+    glEnable(GL_DEPTH_TEST); //Habilita o depth-buffering
 
-    // Set the light position
-    GLfloat qaLightPosition[] = { 0, 0, 0, 1 };
-
-    glLightfv(GL_LIGHT0, GL_POSITION, qaLightPosition);
-
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_DEPTH_TEST);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL) ;
+    glEnable(GL_COLOR_MATERIAL); //Habilita a definição da cor do material a partir da cor corrente
 }
 
-//Rotina para exibição na tela.
+//Rotina para exibição na tela
 void display(void)
 {
+    //Laço de repeticao para simular o tempo
     if(tempo > 0.2f)
     {
         tempo = tempo - (tempo/500.0f);
@@ -429,9 +410,9 @@ void display(void)
         DefinePosicaoInimigos();
     }
 
-    glClearColor(0.8, 0.8, 0.8, 0.0);
+    glClearColor(0.8, 0.8, 0.8, 0.0); // Especifica que a cor de fundo da janela será cinza (Igual do FOG)
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //Limpa a janela e o depth buffer
 
     //Controle do FOG - Ativa e Desativa
     if (fogLigado)
@@ -453,36 +434,37 @@ void display(void)
     glRotatef(20.0f,1.0f,0.0f,0.0f); //Gira a cena 20 graus ao redor do eixo X
 
     desenhaEsfera(); //Desenha Esfera
+
     desenhaEstrada(); //Desenha Estrada
     desenhaChao(); //Desenha Chao
     desenhaTunel(); //Desenha Tunel
     desenhaMuro(); //Desenha Muro
     AtualizarPosicao(); //Atualiza Posicao do Trem
 
-    //Caso o personagem morreu após as colisoes
+    //Caso o personagem morra após as colisoes
     if(quantidadeVida == 0)
     {
+        glColor3f(0, 0, 0);
         desenhaStringNaTela("Voce morreu! Aperte R para reiniciar", 2 , 3.5, -2); //Escreve na tela que morreu
     }
 
-    glColor3f(0, 0, 1);
-    char strBuf[15];
-    sprintf(strBuf,"Vida : %d ",quantidadeVida);
-    desenhaStringNaTela(strBuf, 2,4, -2);
+    glColor3f(0, 0, 0);
+    char texto[5];
+    sprintf(texto,"Vida: %i",quantidadeVida);
+    desenhaStringNaTela(texto, 2,4, -2); //Escreve na tela a quantidade de vida
 
     glFlush(); //Esvazia todos os buffers
-    glutSwapBuffers(); //Troca os buffers da janela atual se estiver em buffer duplo.
-
+    glutSwapBuffers(); //Troca os buffers da janela atual se estiver em buffer duplo
 }
 
-//Janela OpenGL reformula a rotina.
+//Rotina da janela de desenho do OpenGL
 static void resize(int width, int height)
 {
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
+    glViewport(0, 0, width, height); //Define a área que se pode utilizar para efetuar desenhos
+    glMatrixMode(GL_PROJECTION); //Define a pilha de matrizes de projeção
     glLoadIdentity(); //Reinicializa as transformações
-    gluPerspective(45, (GLdouble)width/(GLdouble)height,1,400);
-    glMatrixMode(GL_MODELVIEW);
+    gluPerspective(45, (GLdouble)width/(GLdouble)height,1,400); //Define a transformação de perspectiva
+    glMatrixMode(GL_MODELVIEW); //Define a pilha de matrizes de modelview
 }
 
 //Rotina de processamento da entrada do teclado
@@ -492,14 +474,14 @@ static void key(unsigned char key, int x, int y)
     {
     case 27 :
     case 'q':
-        exit(0); //Sair do jogo
+        exit(0); //Encerra o jogo
         break;
     case 'w':
         estaPulando = true; //Define que o personagem está pulando
         esfera.velocidade.y +=10; //Permite pular ("impulso") na direcao y
         break;
     case 'a':
-        if(estaPulando == false)
+        if(estaPulando == false) //Define que o personagem está no chao
         {
             // Trava a esfera em x para não ultrapassar o limite da faixa da esquerda
             if(esfera.posicao.x<=-2.5)
@@ -512,7 +494,7 @@ static void key(unsigned char key, int x, int y)
         }
         break;
     case 'd':
-        if(estaPulando == false)
+        if(estaPulando == false) //Define que o personagem está no chao
         {
             // Trava a esfera em x para não ultrapassar o limite da faixa da direita
             if(esfera.posicao.x>=2.5)
@@ -534,11 +516,11 @@ static void key(unsigned char key, int x, int y)
     case 'f': //Ativa e Desliga o FOG atraves de um flag
         if (fogLigado)
         {
-            fogLigado = false;
+            fogLigado = false; //FOG Desligado
         }
         else
         {
-            fogLigado = true;
+            fogLigado = true; //FOG Ligado
         }
         break;
     }
@@ -548,8 +530,8 @@ static void key(unsigned char key, int x, int y)
 //Rotina principal.
 int main(int argc, char **argv)
 {
-    srand(time(NULL)); // Randomiza o rand()
-    InteracaoPrint();
+    srand(time(NULL)); //Randomiza o rand()
+    InteracaoPrint(); //Mostra os comandos do jogo na janela de instruções
 
     glutInit(&argc, argv);
     glutInitWindowSize(600,600);

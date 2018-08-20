@@ -4,6 +4,7 @@
 #include <stdlib.h>     // Header file for malloc/free.
 #include <GL/glu.h>	// Header File For The GLu32 Library
 
+// Codigo fonte do LerBMP fornecido pelo Professor Scalco e adaptado por Renan Souza Silva
 
 /* Simple BMP reading code, should be adaptable to many
 systems. Originally from Windows, ported to Linux, now works on my Mac
