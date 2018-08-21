@@ -19,13 +19,13 @@ void LerArquivo(STL *modelo, char *arquivo)
 
     if(arq==NULL)
     {
-        printf("NÃ£o consegui abrir o arquivo.");
+        printf("Não consegui abrir o arquivo.");
         exit(EXIT_FAILURE);
     }
 
     (*modelo).faces = (Face*) malloc(sizeof(Face));
 
-    // LÃª o arquivo todo
+    // Lê o arquivo todo
     while (!feof(arq))
     {
         // faz a leitura dos itens de cada linha
@@ -38,11 +38,11 @@ void LerArquivo(STL *modelo, char *arquivo)
         char linha1[255];
         sprintf(linha1, "");
 
-        // para eliminar espaÃ§os do inÃ­cio da linha
+        // para eliminar espaços do início da linha
         int i = 0;
         while (linha[i] == ' ')
             i++;
-        // para eliminar 2 espaÃ§os seguidos
+        // para eliminar 2 espaços seguidos
         while (i < strlen(linha)){
             if ( !( (linha[i] == ' ') && (linha[i+1] == ' ') ) )
                 sprintf(linha1, "%s%c", linha1,linha[i]);
@@ -90,7 +90,7 @@ void LerArquivo(STL *modelo, char *arquivo)
             modelo->faces[face].ponto[ponto].y = atof(itens[2]);
             modelo->faces[face].ponto[ponto].z = atof(itens[3]);
 
-            // calc mÃ¡x e min
+            // calc máx e min
             if ((face == 0) && (ponto == 0)){  // primeiro ponto
                 modelo->minimo.x = modelo->faces[face].ponto[ponto].x;
                 modelo->minimo.y = modelo->faces[face].ponto[ponto].y;

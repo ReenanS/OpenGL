@@ -38,7 +38,7 @@ using namespace std;
 //Define a quantidade de inimigos do jogo
 const int quantidadeInimigo = 10;
 
-//Define os pontos de vida do personagem
+//Define a quantidade de vida do personagem
 int quantidadeVida = 3;
 
 //Define o raio da esfera
@@ -65,7 +65,7 @@ GLuint muroTex;
 
 //Estruturas
 
-//Criando uma (estrutura) objeto - esfera
+//(Estrutura) para objeto - esfera
 struct Coordenada
 {
     float x,y,z;
@@ -79,7 +79,7 @@ struct Objeto3D
 
 Objeto3D esfera;
 
-//Criando uma (estrutura) objeto - inimigo (trem)
+//(Estrutura) objeto - inimigo (trem)
 struct Objeto3DInimigo
 {
     Coordenada posicao;
@@ -242,7 +242,7 @@ void desenhaStringNaTela(char *string, float x, float y, float z)
 // Inicio da mecanica de colisão
 // ******************************************************************************************************
 
-//Essa funcao compara a colisao do personagem (esfera) com os inimigos (trem - cubo) - Colisao AABB
+//Essa funcao verifica se houve colisao do personagem (esfera) com os inimigos (trem - cubo) - Colisao AABB
 bool objetoColidiu(struct Objeto3D esfera, struct Objeto3DInimigo trem)
 {
     //Verifica se houve colisao para os eixos X e Z - Metodo AABB
@@ -389,7 +389,7 @@ static void init(void)
     glLightfv(GL_LIGHT0, GL_POSITION, posicaoLuz);
 
     glEnable(GL_LIGHTING); //Ativa a iluminação
-    glEnable(GL_LIGHT0); //Ativa a luz#0
+    glEnable(GL_LIGHT0); //Ativa a luz de número 0
 
     glEnable(GL_DEPTH_TEST); //Habilita o depth-buffering
 
@@ -441,7 +441,7 @@ void display(void)
     desenhaMuro(); //Desenha Muro
     AtualizarPosicao(); //Atualiza Posicao do Trem
 
-    //Caso o personagem morra após as colisoes
+    //Se o personagem morreu após as colisoes
     if(quantidadeVida == 0)
     {
         glColor3f(0, 0, 0);
