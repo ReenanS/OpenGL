@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <gl/glu.h>
+#include <GL/glu.h>
 #include "ImportarSTL.h"
 
 // Codigo fonte do ImportarSTL fornecido pelo Professor Scalco
